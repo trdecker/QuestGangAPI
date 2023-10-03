@@ -1,15 +1,13 @@
 {
-  "name": "mongotest",
+  "name": "mongoTest",
   "version": "1.0.0",
-  "main": "helloWorld.js",
+  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "repository": "https://github.com/trdecker/mongoTest.git",
+  "author": "Tad Decker <trdecker@byu.edu>",
+  "license": "MIT",
   "dependencies": {
     "express": "^4.18.2"
   }
