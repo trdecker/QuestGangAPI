@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "node-start": "node index.js"
   },
   "repository": "https://github.com/trdecker/mongoTest.git",
   "author": "Tad Decker <trdecker@byu.edu>",
