@@ -1,26 +1,55 @@
 /**
- * A test index.js file.
+ * A test Node input.
  * 
  * Receive request and send response
  * Check for a query
  */
-
+const dotenv = require('dotenv')
 const express = require('express')
+const mongoose = require('mongoose')
+
+dotenv.config()
+
 const app = express()
 const port = process.env.PORT || 3000
+const uri = process.env.URI
+
+console.log(port)
+console.log(uri)
+
+mongoose.connect(uri, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+.then(() => {
+  console.log("Connected to MongoDB")
+})
+.catch((e) => {
+  console.error("Error connecting to MongoDB", e)
+}) 
 
 app.use(express.json())
 
-app.get('/', (req, res) => {
-  const thing = req.query.test
-  if (thing) {
-		const response = {
-			message: 'You\'ve sent an API request!'
-		}
-    res.json(response)
-  }
-  else {
-    res.send('Hello, World!')
+const userScheme = new mongoose.Schema({
+  username: String,
+  email: String
+})
+
+const User = mongoose.model('User', userScheme)
+
+app.listen(port, () => {
+  console.log(`Server is listening on port ${port}`)
+})
+
+app.get('/', async (req, res) => {
+  try {
+    const users = User.find()
+    res.json(users)
+  } catch (e) {
+    console.error('Serve side error', e)
+    res.status(500).json({ error: 'Internal server error' })
+  } finally {
+    client.close()
   }
 });
 
@@ -51,6 +80,9 @@ app.delete('/', (req, res) => {
     res.send('Failure')
 })
 
-app.listen(port, () => {
-  console.log(`Server is listening on port ${port}`)
-});
+process.on('SIGINT', () => {
+  mongoose.connection.close(() => {
+    console.log('MongoDB connection closed through app termination');
+    process.exit(0);
+  })
+})

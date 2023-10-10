@@ -1,0 +1,8 @@
+.env
+.vscode
+.editorconfig
+node_modules
+*.lock
+.env.local
+.env.development
+.gitignore
