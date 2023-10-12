@@ -30,12 +30,13 @@ mongoose.connect(uri, {
 
 app.use(express.json())
 
-const userScheme = new mongoose.Schema({
-  username: String,
-  email: String
+const bookScheme = new mongoose.Schema({
+  title: String,
+  author: String,
+  publishedYear: String
 })
 
-const User = mongoose.model('User', userScheme)
+const Book = mongoose.model('Book', bookScheme)
 
 app.listen(port, () => {
   console.log(`Server is listening on port ${port}`)
@@ -43,15 +44,13 @@ app.listen(port, () => {
 
 app.get('/', async (req, res) => {
   try {
-    const users = User.find()
-    res.json(users)
+    const books = await Book.find(req.body)
+    res.json(books)
   } catch (e) {
     console.error('Serve side error', e)
     res.status(500).json({ error: 'Internal server error' })
-  } finally {
-    client.close()
   }
-});
+})
 
 app.put('/', (req, res) => {
   const thing = req.body.thing
@@ -63,12 +62,16 @@ app.put('/', (req, res) => {
 })
 
 app.post('/', (req, res) => {
-  const thing = req.body.thing
-  if (thing) {
-    res.send('Success: you sent: ' + thing)
+  try {
+    const newBook = new Book(req.body)
+    console.log(newBook)
+    const savedBook = newBook.save()
+    console.log(savedBook)
+    // res.json(savedBook)
+    res.send("Success")
+  } catch (e) {
+    res.status(500)
   }
-  else
-    res.send('Failure')
 })
 
 app.delete('/', (req, res) => {
