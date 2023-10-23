@@ -42,9 +42,15 @@ app.listen(port, () => {
   console.log(`Server is listening on port ${port}`)
 })
 
+app.get('/classes', async (req, res) => {
+  res.send ("hello world")
+})
+
 app.get('/', async (req, res) => {
   try {
     const books = await Book.find(req.body)
+
+    const classes = await Classes.find()
     res.json(books)
   } catch (e) {
     console.error('Serve side error', e)
