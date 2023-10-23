@@ -26,7 +26,7 @@ mongoose.connect(uri, {
 })
 .catch((e) => {
   console.error("Error connecting to MongoDB", e)
-}) 
+})
 
 app.use(express.json())
 
