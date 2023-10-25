@@ -1,9 +1,10 @@
 {
   "name": "mongoTest",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "src/app.js",
   "scripts": {
-    "node-start": "node index.js"
+    "node-start": "node src/app.js",
+    "node-test": "node index.js"
   },
   "repository": "https://github.com/trdecker/mongoTest.git",
   "author": "Tad Decker <trdecker@byu.edu>",

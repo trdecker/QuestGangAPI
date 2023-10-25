@@ -38,6 +38,14 @@ const bookScheme = new mongoose.Schema({
 
 const Book = mongoose.model('Book', bookScheme)
 
+const userClassSchema = new mongoose.Schema({
+  className: String,
+  classSymbol: String,
+  classId: Number
+})
+
+const userClass = mongoose.model('UserClass', userClassSchema, "Classes")
+
 app.listen(port, () => {
   console.log(`Server is listening on port ${port}`)
 })
@@ -48,10 +56,9 @@ app.get('/classes', async (req, res) => {
 
 app.get('/', async (req, res) => {
   try {
-    const books = await Book.find(req.body)
+    const userClasses = await userClass.find(req.body)
 
-    const classes = await Classes.find()
-    res.json(books)
+    res.json(userClasses)
   } catch (e) {
     console.error('Serve side error', e)
     res.status(500).json({ error: 'Internal server error' })

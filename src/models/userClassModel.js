@@ -1,14 +1,33 @@
 const mongoose = require('mongoose')
 
 const userClassSchema = new mongoose.Schema({
-    name: String,
-    id: Number
+    className: String,
+    classSymbol: String,
+    classId: Number
 })
 
-const userClass = mongoose.model('UserClass', userClassSchema)
+/*
+className
+"Barbarian"
+classSymbol
+"BARBARIAN"
+classId
+3
+*/
 
-function getUserClass(classId) {
-    return userClass.find().exec()
+const userClass = mongoose.model('userClass', userClassSchema, 'Classes')
+
+/**
+ * Return a class given a classId. Range is 1-3 INCLUSIVE
+ * @param {Number} classId 
+ * @returns 
+ */
+async function getUserClass(classId) {
+    const query = { classId: classId }
+    console.log(query)
+    const res = await userClass.find(query)
+    console.log('res', res)
+    return res
 }
 
 module.exports = {

@@ -4,7 +4,7 @@ const userClassController = require('../controllers/userClassController')
 
 // router.get('/health', )
 // router.get('')
-router.get('/userClasses/random', userController.getRandomClass)
+router.get('/userClasses/random', userClassController.getRandomClass)
 router.get('/')
 
 module.exports = router
