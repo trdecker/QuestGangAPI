@@ -29,8 +29,8 @@ function rewardGp(userLevel) {
 
 async function requestQuests(req, res) {
     try {
-        const userId = req.query.userId
-        const userLevel = req.query.userLevel
+        const userId = req.query.userId ?? 'test'
+        const userLevel = req.query.userLevel ?? '1'
         const numQuests = req.query.numQuests ?? 3
 
         // TODO: Make sure this doesn't delete something important
@@ -48,38 +48,39 @@ async function requestQuests(req, res) {
             const location3 = locations.at(Math.floor(Math.random() * numLocations))
             const location4 = locations.at(Math.floor(Math.random() * numLocations))
 
+            console.log(location2.id)
+
             const quest = {
                 name: `Quest ${i}`,
                 userId: userId,
                 status: questStatus.NOT_ACTIVE,
                 difficultyLvl: i, // FIXME
-                rewardGp: rewardGp(userLevel), // FIXME: Pass in user level to get scaled rewards. For now placeholder value of 1
+                rewardGp: 100, // FIXME: Pass in user level to get scaled rewards. For now placeholder value of 1
                 questId: generateId(),
                 locations: [
                     {
                         name: location1.name,
-                        locationId: location1.locationId,
-                        neighbors: [location2.locationId, location3.locationId]
+                        locationId: location1.id,
+                        neighbors: [location2.id, location3.id]
                     },
                     {
                         name: location2.name,
-                        locationId: location2.locationId,
-                        neighbors: [location4.locationId]
+                        locationId: location2.id,
+                        neighbors: [location4.id]
                     },
                     {
                         name: location3.name,
-                        locationId: location2.locationId,
-                        neighbors: [location4.locationId]
+                        locationId: location2.id,
+                        neighbors: [location4.id]
                     },
                     {
                         name: location4.name,
-                        locationId: location2.locationId,
+                        locationId: location2.id,
                         neighbors: []
                     }
                 ]
             }
-            const newQuest = new quest(quest)
-            newQuest.save()
+            questModel.saveQuest(quest)
             quests.push(quest)
         }
 
