@@ -20,7 +20,7 @@ const userClass = mongoose.model('userClass', userClassSchema, 'Classes')
 /**
  * Return a class given a classId. Range is 1-3 INCLUSIVE
  * @param {Number} classId 
- * @returns 
+ * @returns {Array} userClass
  */
 async function getUserClass(classId) {
     const query = { classId: classId }
