@@ -7,3 +7,4 @@ yarn.lock
 .env.local
 .env.development
 .gitignore
+database_changes
