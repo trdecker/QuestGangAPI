@@ -12,6 +12,12 @@ async function getRandomMonster(req, res) {
         // Await the retrieval of the monster from the model using the generated monster ID
         const randomMonster = await monsterModel.getSpecifiedMonster(monsterId);
         console.log("Monster: " + randomMonster);
+        /************************
+         * TODO:
+         * Monsters need to be scaled to character level.
+         * monsters have an attack and defense that should
+         * be multiplied by the user's level.
+         * **********************/
 
         // Respond with the retrieved monster in JSON format
         res.json(randomMonster);
@@ -30,4 +36,4 @@ async function getRandomMonster(req, res) {
 // Export the functions for external use
 module.exports = {
     getRandomMonster,
-};
+}
