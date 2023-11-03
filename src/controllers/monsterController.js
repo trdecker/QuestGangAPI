@@ -1,77 +1,33 @@
-const character = require('../models/monsterModel')
-const types = require('../types')
+// Import the monster model from the relative path
+const monsterModel = require('../models/monsterModel');
 
-function createCharacter(req, res) {
+// Asynchronously defines a function to get a random monster
+async function getRandomMonster(req, res) {
     try {
-        let userClassId
-        if (req.body.classId && req.body.classId < 4 && req.body.classId > 0) {
-            userClassId = req.body.classId
-        } else {
-            userClassId = Math.floor(Math.random() * 3) + 1
-        }
-        let weapons = []
-            switch (userClassId) {
-                case 1:
-                    weapons.push({weaponId: 1})
-                    break
-                case 2:
-                    weapons.push({weaponId: 2})
-                    break
-                case 3:
-                    weapons.push({weaponId: 3})
-                    break
-                default:
-            }
-        let items = []
-        switch (userClassId) {
-            case 1:
-                items.push({itemId: 1})
-                break
-            case 2:
-                items.push({itemId: 2})
-                break
-            case 3:
-                items.push({itemId: 1})
-                break
-            default:
-        }
-        let armor = []
-        switch (userClassId) {
-            case 1:
-                armor.push({armorId: 1})
-                break
-            case 2:
-                armor.push({armorId: 2})
-                break
-            case 3:
-                armor.push({armorId: 3})
-                break
-            default:
-        }
+        console.log("In get random monster");
+        // Generate a random monster ID between 1 and 10
+        const monsterId = Math.floor(Math.random() * 10) + 1;
+        console.log(monsterId);
 
-        const newCharacter = {
-            name: req.body.name,
-            classId: userClassId,
-            level: 1,
-            hp: 30,
-            mana: 20,
-            status: types.conditions.NORMAL,
-            weapons,
-            items,
-            armor
+        // Await the retrieval of the monster from the model using the generated monster ID
+        const randomMonster = await monsterModel.getSpecifiedMonster(monsterId);
+        console.log("Monster: " + randomMonster);
 
-        }
+        // Respond with the retrieved monster in JSON format
+        res.json(randomMonster);
+    } catch (err) {
+        // Log the caught error
+        console.error(err);
 
-        character.push(newCharacter)
-
-        res.send("success")
-
-    } catch (e) {
-        console.error(e)
+        // Respond with a 500 status code and an error message in JSON format
+        res.status(500).json({
+            error: 'Internal Server Error',
+            description: e
+        });
     }
 }
 
-
+// Export the functions for external use
 module.exports = {
-    createCharacter
-}
+    getRandomMonster,
+};
