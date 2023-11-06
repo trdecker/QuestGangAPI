@@ -7,7 +7,9 @@
 const questModel = require('../models/questModel')
 const locationModel = require('../models/locationModel')
 const characterModel = require('../models/characterModel')
+const monsterModel = require('../models/monsterModel')
 const { questStatus, userStatus } = require('../types')
+
 
 /**
  * Generates a random ID using the current date and a random number 0-10000.
@@ -45,23 +47,23 @@ async function requestQuests(req, res) {
         const foundUsers = await characterModel.getCharacter(userId)
 
         // If the user doesn't exist, send a 404
-        // if (foundUsers.length == 0) {
-        //     res.status(404).send('Character not found')
-        //     return
-        // }
+        if (foundUsers.length == 0) {
+            res.status(404).send('Character not found')
+            return
+        }
 
         // // If the user is already in a quest, don't let them get a new one!
-        // const user = foundUsers.at(0)
+        const user = foundUsers.at(0)
 
-        // if (user.status !== userStatus.NOT_IN_QUEST) {
-        //     res.status(403).send('User is already in quest! Cannot start a new quest until current is finished.')
-        //     return
-        // }
+        if (user.status !== userStatus.NOT_IN_QUEST) {
+            res.status(403).send('User is already in quest! Cannot start a new quest until current is finished.')
+            return
+        }
 
         // Delete past quest options
-        questModel.deleteUserQuests(userId, questStatus.NOT_ACTIVE)
-        res.send('Success?')
-        return
+        questModel.deleteUserQuests(userId, questStatus.NOT_ACTIVE) // FIXME Why is this not working???
+        // res.send('Success?')
+        // return
 
         const locations = await locationModel.getLocations()
         const numLocations = locations.length
@@ -88,26 +90,40 @@ async function requestQuests(req, res) {
                     {
                         name: location1.name,
                         locationId: location1.id,
+                        monsters: [],
                         neighbors: [location2.id, location3.id]
                     },
                     {
                         name: location2.name,
                         locationId: location2.id,
+                        monsters: [],
                         neighbors: [location4.id]
                     },
                     {
                         name: location3.name,
                         locationId: location2.id,
+                        monsters: [],
                         neighbors: [location4.id]
                     },
                     {
                         name: location4.name,
                         locationId: location2.id,
+                        monsters: [],
                         neighbors: []
                     }
                 ]
             }
-            questModel.saveQuest(quest)
+
+            // For each location, insert a random monster FIXME: Not doing exactly what it should. Race condition??
+            quest.locations.forEach(async (location) => {
+                const monsterId = Math.floor(Math.random() * 10) + 1
+
+                // Await the retrieval of the monster from the model using the generated monster ID
+                const randomMonster = await monsterModel.getSpecifiedMonster(monsterId)
+                location.monsters = [ ...location.monsters, ...randomMonster ]
+            })
+
+            await questModel.saveQuest(quest)
             quests.push(quest)
         }
 
@@ -119,7 +135,8 @@ async function requestQuests(req, res) {
 
     } catch (e) {
         console.error(e)
-        res.status(500).json({ error: 'Internal Server Error', 
+        res.status(500).json({ 
+            error: 'Internal Server Error', 
             description: e
         })
     }

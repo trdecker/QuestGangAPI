@@ -18,6 +18,16 @@ const questSchema = new mongoose.Schema({
     locations: [{
         name: String,
         locationId: String,
+        monsters: [{ 
+            monsterName: String,
+            level: Number,
+            attack: Number,
+            defense: Number,
+            specialFeature: String,
+            symbol: String,
+            monsterID: Number,
+            condition: String
+        }],
         neighbors: [{ type: String }]
     }]
 })
@@ -35,7 +45,7 @@ function saveQuest(quest) {
 }
 
 /**
- * Delete every quest associated with a userId and questStatus
+ * Delete every quest associated with a userId and questStatus.
  * @param {String} userId 
  * @param {String} questStatus 
  */
@@ -43,7 +53,11 @@ async function deleteUserQuests(userId, questStatus) {
     console.log('userId: ', userId)
     console.log('status: ', questStatus)
     try {
-        await questModel.deleteMany()
+        let query = { userId: userId }
+        if (questStatus) {
+            query = { ...query, status: questStatus }
+        }
+        await questModel.deleteMany(query)
     } catch (e) {
         console.error('Error in deleting quests')
         throw (e)
