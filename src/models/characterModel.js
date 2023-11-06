@@ -1,3 +1,8 @@
+/**
+ * @file characterModel.js
+ * @date 11/4/2023
+ */
+
 const mongoose = require('mongoose')
 // const conditions = require('../types')
 
@@ -17,15 +22,51 @@ const mongoose = require('mongoose')
 */
 
 const characterSchema = new mongoose.Schema({
-    className: String,
-    userId: Number,
-    classSymbol: String,
+    name: String,
+    userId: String,
     classId: Number,
-    status: String
+    status: String,
+    condition: String,
+    level: Number,
+    mana: Number,
+    hp: Number,
+    armor: [{
+        name: String,
+        armorId: Number,
+        defense: Number
+    }],
+    items: [{
+        name: String,
+        type: String,
+        mod: Number
+    }],
+    weapons: [{
+        name: String,
+        weaponId: Number,
+        damageMod: Number,
+        condEffect: String,
+        type: String
+    }]
 })
 
-const character = mongoose.model('character', characterSchema, 'characters')
+const characterModel = mongoose.model('character', characterSchema, 'characters')
+
+function createCharacter(character) {
+    const newCharacter = new characterModel(character)
+    return newCharacter.save()
+}
+
+async function getCharacter(userId) {
+    try {
+        const newCharacter = await characterModel.find({ userId: userId }).exec()
+        return newCharacter
+    } catch (e) {
+        console.error('Error while getting character')
+        throw (e)
+    }
+}
 
 module.exports = {
-    character
+    createCharacter,
+    getCharacter
 }
