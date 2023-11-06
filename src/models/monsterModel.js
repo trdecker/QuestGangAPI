@@ -1,33 +1,26 @@
 const mongoose = require('mongoose')
 
 const monsterSchema = new mongoose.Schema({
-    monster_name: String,
+    monsterName: String,
     level: Number,
     attack: Number,
     defense: Number,
-    special_feature: String,
+    specialFeature: String,
     symbol: String,
     monsterID: Number,
     condition: String
 })
 
-const monsterClass = mongoose.model('monsterSchema', monsterSchema, 'Monsters')
+const monsterModel = mongoose.model('monster', monsterSchema, 'monsters')
 
 async function getSpecifiedMonster(monsterId) {
-    // Define a query object to search for a class with the given classId
-    const query = { classId: monsterId };
-
-    // Log the query to the console
-    console.log(query);
-
-    // Perform an asynchronous search in the database using the defined query
-    const res = await monsterClass.find(query);
-
-    // Log the result to the console
-    console.log('res', res);
-
-    // Return the result of the query
-    return res;
+    try {
+        const newMonster = await monsterModel.find({ monsterId: monsterId })
+        return newMonster
+    } catch (e) {
+        console.error('Error while getting monster')
+        throw (e)
+    }
 }
 
 module.exports = {

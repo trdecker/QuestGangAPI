@@ -1,7 +1,7 @@
 const character = require('../models/characterModel')
-const types = require('../types')
+const { conditions, userStatus } = require('../types')
 
-function createCharacter(req, res) {
+function newCharacter(req, res) {
     try {
         let userClassId
         if (req.body.classId && req.body.classId < 4 && req.body.classId > 0) {
@@ -52,17 +52,17 @@ function createCharacter(req, res) {
         const newCharacter = {
             name: req.body.name,
             classId: userClassId,
+            status: userStatus.NOT_IN_QUEST,
+            condition: conditions.NORMAL,
             level: 1,
             hp: 30,
             mana: 20,
-            status: types.conditions.NORMAL,
             weapons,
             items,
             armor
-
         }
 
-        character.push(newCharacter)
+        character.createCharacter(newCharacter)
 
         res.send("success")
 
@@ -73,5 +73,5 @@ function createCharacter(req, res) {
 
 
 module.exports = {
-    createCharacter
+    newCharacter
 }
