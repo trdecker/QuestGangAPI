@@ -33,6 +33,6 @@ router.get('/quests/status')
 // Leave a quest prematurely. Rewards for doing the quest are NOT attained.
 router.put('/quests/leave')
 
-router.post('/character', characterController.createCharacter)
+// router.post('/character', characterController.createCharacter)
 
 module.exports = router

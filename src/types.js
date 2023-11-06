@@ -1,8 +1,8 @@
 const conditions = {
-    NORMAL: "N",
-    BURNED: "B",
-    PARALYZED: "P",
-    FROZEN: "F"
+    NORMAL: "NORMAL",
+    BURNED: "BURNED",
+    PARALYZED: "PARALYZED",
+    FROZEN: "FROZEN"
 }
 
 const userStatus = {
@@ -18,5 +18,6 @@ const questStatus = {
 
 module.exports = {
     conditions,
-    questStatus
+    questStatus,
+    userStatus
 }

@@ -9,7 +9,7 @@ const locationSchema = new mongoose.Schema({
 const location = mongoose.model('location', locationSchema, 'locations')
 
 async function getLocations() {
-    const locations = location.find()
+    const locations = await location.find()
     return locations
 }
 

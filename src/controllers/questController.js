@@ -6,7 +6,8 @@
 
 const questModel = require('../models/questModel')
 const locationModel = require('../models/locationModel')
-const questStatus = require('../types')
+const characterModel = require('../models/characterModel')
+const { questStatus, userStatus } = require('../types')
 
 /**
  * Generates a random ID using the current date and a random number 0-10000.
@@ -27,14 +28,40 @@ function rewardGp(userLevel) {
     return userLevel * 10
 }
 
+/**
+ * @description sends a list of quests to the user. Saves those quests in
+ * "quests" with status NOT_ACTIVE. If the user DOES NOT have the status "NOT_IN_QUEST",
+ * then do nothing (they can't start a new quest if they're already in one!)
+ * @param {Object} req 
+ * @param {Object} res 
+ */
 async function requestQuests(req, res) {
     try {
         const userId = req.query.userId ?? 'test'
         const userLevel = req.query.userLevel ?? '1'
         const numQuests = req.query.numQuests ?? 3
 
-        // TODO: Make sure this doesn't delete something important
-        // questModel.deleteMany({ userId: userId, status: questStatus.NOT_ACTIVE })
+        // Get the current user
+        const foundUsers = await characterModel.getCharacter(userId)
+
+        // If the user doesn't exist, send a 404
+        // if (foundUsers.length == 0) {
+        //     res.status(404).send('Character not found')
+        //     return
+        // }
+
+        // // If the user is already in a quest, don't let them get a new one!
+        // const user = foundUsers.at(0)
+
+        // if (user.status !== userStatus.NOT_IN_QUEST) {
+        //     res.status(403).send('User is already in quest! Cannot start a new quest until current is finished.')
+        //     return
+        // }
+
+        // Delete past quest options
+        questModel.deleteUserQuests(userId, questStatus.NOT_ACTIVE)
+        res.send('Success?')
+        return
 
         const locations = await locationModel.getLocations()
         const numLocations = locations.length
@@ -48,7 +75,7 @@ async function requestQuests(req, res) {
             const location3 = locations.at(Math.floor(Math.random() * numLocations))
             const location4 = locations.at(Math.floor(Math.random() * numLocations))
 
-            console.log(location2.id)
+            // console.log(location2.id)
 
             const quest = {
                 name: `Quest ${i}`,
