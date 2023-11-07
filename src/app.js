@@ -10,6 +10,7 @@ const dotenv = require('dotenv')
 const express = require('express')
 const apiRoutes = require('./routes/apiRoutes')
 const connect = require('../config/database.js')
+const cors = require('cors')
 
 const app = express()
 
@@ -24,6 +25,14 @@ connect(URI)
 // Use API routes from apiRoutes.js
 app.use(express.json())
 app.use('/', apiRoutes)
+
+const corsOptions = {
+    origin: '*://localhost:*/*',
+    methods: 'GET, PUT, POST, DELETE, HEAD',
+    allowedHeaders: 'Content-Type, Authorization'
+}
+
+app.use(cors(corsOptions))
 
 // Begin server!
 app.listen(port, () => {

@@ -49,9 +49,7 @@ function saveQuest(quest) {
  * @param {String} userId 
  * @param {String} questStatus 
  */
-async function deleteUserQuests(userId, questStatus) {
-    console.log('userId: ', userId)
-    console.log('status: ', questStatus)
+async function deleteCharacterQuests(userId, questStatus) {
     try {
         let query = { userId: userId }
         if (questStatus) {
@@ -64,7 +62,37 @@ async function deleteUserQuests(userId, questStatus) {
     }
 }
 
+/**
+ * Find a quest given a questId
+ * @param {String} questId 
+ * @returns 
+ */
+async function getQuest(questId) {
+    try {
+        const quest = await questModel.find({ questId: questId })
+        return quest
+    } catch (e) {
+        console.error('Error in accepting quest')
+        throw (e)
+    }
+}
+
+async function updateStatus (questId, questStatus) {
+    try {
+        await questModel.findOneAndUpdate(
+            { questId: questId },
+            { $set: { status: questStatus } },
+            { new: true }
+        )
+    } catch (e) {
+        console.error('Error in accepting quest')
+        throw (e)
+    }
+}
+
 module.exports = {
     saveQuest,
-    deleteUserQuests
+    getQuest,
+    deleteCharacterQuests,
+    updateStatus
 }

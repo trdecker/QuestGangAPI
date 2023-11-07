@@ -2,6 +2,12 @@
 const userClassModel = require('../models/userClassModel');
 
 // Asynchronously defines a function to get a random user class
+
+/**
+ * 
+ * @param {Object} req 
+ * @param {Object} res 
+ */
 async function getRandomUserClass(req, res) {
     try {
         // Log a message indicating the start of the function execution

@@ -23,13 +23,9 @@ router.get('/monster/random', monsterController.getRandomMonster)
 // ##### Quest routes #####
 
 // Returns a list of Quests for the user to choose from. These are added to the database Quests, with the status "NOT_ACTIVE".
-// TODO: If this is called a second time, those quests are all discarded, and a new list is created?
-// If a user is ALREADY IN A QUEST (or combat) nothing happens--they cannot begin a new quest until their current is finished.
 router.put('/quests/request', questController.requestQuests)
 // Choose a quest to begin. Pass the questId as a query. Quest is marked as "ACTIVE", TODO: and the rest are discarded.
-router.put('/quests/choose')
-// TODO: Remove?
-router.put('/quests/begin')
+router.put('/quests/accept', questController.acceptQuest)
 // Returns status of quest.
 router.get('/quests/status')
 // Leave a quest prematurely. Rewards for doing the quest are NOT attained.
