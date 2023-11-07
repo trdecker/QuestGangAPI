@@ -13,16 +13,18 @@ const { questStatus, userStatus } = require('../types')
 
 /**
  * Generates a random ID using the current date and a random number 0-10000.
+ * @deprecated
  * @returns {String} random ID
  */
 function generateId() {
     const now = Date.now()
     const rand = Math.floor(Math.random() * 10000)
     return `${now}-${rand}`
-  }
+}
 
   /**
    * SUPER basic function to get reward amount. TODO: Improve
+   * @deprecated
    * @param {Number} userLevel 
    * @returns {Number} reward GP
    */
@@ -39,9 +41,15 @@ function rewardGp(userLevel) {
  */
 async function requestQuests(req, res) {
     try {
-        const userId = req.query.userId ?? 'test'
+        const userId = req.query.userId ?? null
         const userLevel = req.query.userLevel ?? '1'
         const numQuests = req.query.numQuests ?? 3
+
+        // Must send user ID
+        if (!userId) {
+            res.status(400).send('User ID required')
+            return
+        }
 
         // Get the current user
         const foundUsers = await characterModel.getCharacter(userId)
@@ -61,7 +69,7 @@ async function requestQuests(req, res) {
         }
 
         // Delete past quest options
-        questModel.deleteUserQuests(userId, questStatus.NOT_ACTIVE) // FIXME Why is this not working???
+        questModel.deleteCharacterQuests(userId, questStatus.NOT_ACTIVE) // FIXME Why is this not working???
         // res.send('Success?')
         // return
 
@@ -142,6 +150,75 @@ async function requestQuests(req, res) {
     }
 }
 
+async function acceptQuest(req, res) {
+    try {
+        const userId = req.query.userId ?? null
+        const questId = req.query.questId ?? null
+
+        if (!userId) {
+            res.status(400).send('User ID required')
+            return
+        }
+
+        if (!req.query?.questId) {
+            res.status(404).send('Quest ID rquired')
+            return
+        }
+
+        // Get the current user
+        const foundUsers = await characterModel.getCharacter(userId)
+
+        // If the user doesn't exist, send a 404
+        if (foundUsers.length == 0) {
+            res.status(404).send('Character not found')
+            return
+        }
+        const user = foundUsers.at(0)
+
+        // If the user is already in a quest, don't let them get a new one!
+        if (user.status !== userStatus.NOT_IN_QUEST) {
+            res.status(403).send('User is already in quest! Cannot start a new quest until current is finished.')
+            return
+        }
+
+        // Check if quest exists by finding it
+        const foundQuests = questModel.getQuest(questId)
+
+        // If quest not found, return 404
+        if (foundQuests.length == 0) {
+            res.status(404).send('Character not found')
+            return
+        }
+        const quest = foundQuests[0]
+        console.log(quest)
+
+        // Quest MUST be already associated with user
+        if (quest.userId !== userId) {
+            res.status(403).send('Character does not own quest!')
+            return
+        }
+
+        // Change the chosen quest status to ACTIVE
+        questModel.updateStatus(questId, questStatus.ACTIVE)
+
+        // Delete all the quests that weren't chosen
+        questModel.deleteCharacterQuests(userId, questStatus.IN_ACTIVE)
+
+        // Update character status to IN_QUEST
+        characterModel.updateStatus(userId, userStatus.IN_QUEST)
+
+        res.json(quest)
+
+    } catch (e) {
+        res.status(500).json({
+            error: 'Internal Server Error',
+            description: e
+        })
+        throw (e)
+    }
+}
+
 module.exports = {
-    requestQuests
+    requestQuests,
+    acceptQuest
 }

@@ -4,22 +4,7 @@
  */
 
 const mongoose = require('mongoose')
-// const conditions = require('../types')
-
-/*
-{
-"_id":{"$oid":"653ab8ffa4949f0d1e9d9379"},
-"userId":"12345",
-"armor":[{"name":"Armor of coolness","armorId":{"$numberInt":"123"},"defense":{"$numberInt":"10"}}],
-"classId":"1",
-"condition":"N",
-"hp":{"$numberInt":"30"},
-"items":[{"name":"Potion of healing","type":"health","mod":{"$numberInt":"10"}}],
-"level":"1",
-"mana":{"$numberInt":"20"},
-"status":"N","weapons":[{"name":"Dagger of Paralyzing","weaponId":{"$numberInt":"123"},"damageMod":{"$numberInt":"5"},"condEffect":"P","type":"Dagger"}]
-}
-*/
+const { userStatus } = require('../types')
 
 const characterSchema = new mongoose.Schema({
     name: String,
@@ -51,11 +36,19 @@ const characterSchema = new mongoose.Schema({
 
 const characterModel = mongoose.model('character', characterSchema, 'characters')
 
+/**
+ * @param {Object} character 
+ * @returns 
+ */
 function createCharacter(character) {
     const newCharacter = new characterModel(character)
     return newCharacter.save()
 }
 
+/**
+ * @param {String} userId 
+ * @returns {Object} The new character created
+ */
 async function getCharacter(userId) {
     try {
         const newCharacter = await characterModel.find({ userId: userId }).exec()
@@ -66,7 +59,21 @@ async function getCharacter(userId) {
     }
 }
 
+async function updateStatus(userId, characterStatus) {
+    try {
+        await characterModel.findOneAndUpdate(
+                { userId: userId },
+                { $set: { status: characterStatus } }, 
+                { new: true }
+            )
+    } catch (e) {
+        console.error('Error updating character status')
+        throw (e)
+    }
+}
+
 module.exports = {
     createCharacter,
-    getCharacter
+    getCharacter,
+    updateStatus
 }
