@@ -27,8 +27,9 @@ app.use(express.json())
 app.use('/', apiRoutes)
 
 const corsOptions = {
-    origin: '*://localhost:*/*',
-    methods: 'GET, PUT, POST, DELETE, HEAD',
+    origin: 'http://localhost:3000, http://localhost:80',
+    methods: 'GET, PUT, POST, DELETE, HEAD, PATCH',
+    credentials: true,
     allowedHeaders: 'Content-Type, Authorization'
 }
 
