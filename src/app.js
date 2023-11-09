@@ -33,7 +33,7 @@ const corsOptions = {
     allowedHeaders: 'Content-Type, Authorization'
 }
 
-app.use(cors(corsOptions))
+app.use(cors())
 
 // Begin server!
 app.listen(port, () => {
