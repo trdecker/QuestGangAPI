@@ -16,7 +16,7 @@ const app = express()
 
 // Get environment variables
 dotenv.config()
-const port = process.env.PORT
+const port = process.env.PORT ?? 80
 const URI = process.env.URI
 
 // Connect to MongoDB
@@ -27,13 +27,13 @@ app.use(express.json())
 app.use('/', apiRoutes)
 
 const corsOptions = {
-    origin: ['http://localhost:3000', 'http://localhost:80'],
+    origin: ['http://localhost:3000', 'http://localhost:80', 'https://questgangapi.onrender.com', process.env.IP_1],
     methods: 'GET, PUT, POST, DELETE, HEAD, PATCH',
     credentials: true,
     allowedHeaders: 'Content-Type, Authorization'
 }
 
-app.use(cors())
+app.use(cors(corsOptions))
 
 // Begin server!
 app.listen(port, () => {
