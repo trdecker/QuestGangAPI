@@ -1,6 +1,11 @@
 const character = require('../models/characterModel')
 const { conditions, userStatus } = require('../types')
 
+/**
+ * @deprecated Replace with sign in call
+ * @param {Object} req 
+ * @param {Object} res 
+ */
 function newCharacter(req, res) {
     try {
         let userClassId
@@ -52,7 +57,11 @@ function newCharacter(req, res) {
         const newCharacter = {
             name: req.body.name,
             classId: userClassId,
-            status: userStatus.NOT_IN_QUEST,
+            status: {
+                status: userStatus.NOT_IN_QUEST,
+                eventId: null,
+                locationId: null
+            },
             condition: conditions.NORMAL,
             level: 1,
             hp: 30,
@@ -68,10 +77,90 @@ function newCharacter(req, res) {
 
     } catch (e) {
         console.error(e)
+        res.status(500).send('Internal error')
     }
 }
 
+/**
+ * @description Get the details about a character
+ * @param {Object} req 
+ * @param {Object} res 
+ */
+async function getCharacter(req, res) {
+    try {
+        const username = req.query.username
+        console.log(username)
+
+        // Require a user ID
+        if (!username) {
+            res.status(400).send('User ID is a required field')
+            return
+        }
+
+        const characters = await character.getCharacterWithUsername(username)
+
+        // Return 404 if no user found
+        if (characters.length == 0) {
+            res.status(404).send('No character found with that username')
+            return
+        }
+
+        // Return the character WITHOUT the hashed password
+        const found = characters.at(0)
+
+        const json = {
+            username: found.username,
+            userId: found.userId,
+            name: found.name,
+            classId: found.classId,
+            status: found.status,
+            condition: found.condition,
+            level: found.level,
+            mana: found.mana,
+            hp: found.hp,
+            armor: found.armor,
+            items: found.items,
+            weapons: found.weapons
+        }
+
+        res.json(json)
+    } catch (e) {
+        console.error(e)
+        res.status(500).send('Error getting character')
+    }
+}
+
+async function getCharacterStatus(req, res) {
+    try {
+        const username = req.query.username
+        console.log(username)
+
+        // Require a user ID
+        if (!username) {
+            res.status(400).send('User ID is a required field')
+            return
+        }
+
+        const characters = await character.getCharacterWithUsername(username)
+
+        // Return 404 if no user found
+        if (characters.length == 0) {
+            res.status(404).send('No character found with that username')
+            return
+        }
+
+        // Return the character WITHOUT the hashed password
+        const found = characters.at(0)
+
+        res.json(found.status)
+    } catch (e) {
+        console.error(e)
+        res.status(500).send('Error getting character')
+    }
+}
 
 module.exports = {
-    newCharacter
+    newCharacter,
+    getCharacter,
+    getCharacterStatus
 }

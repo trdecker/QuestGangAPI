@@ -8,7 +8,8 @@ const monsterSchema = new mongoose.Schema({
     specialFeature: String,
     symbol: String,
     monsterID: Number,
-    condition: String
+    condition: String,
+    boss: Boolean
 })
 
 const monsterModel = mongoose.model('monster', monsterSchema, 'monsters')
