@@ -31,6 +31,9 @@ router.put('/quests/accept', questController.acceptQuest)
 // Leave a quest prematurely. Rewards for doing the quest are NOT attained.
 router.put('/quests/leave', questController.leaveQuest)
 
+router.put('/action', questController.doAction) // For use in combat
+router.put('/choice', questController.makeChoice) // For use while in quest
+
 // router.post('/character', characterController.newCharacter)
 router.get('/character', characterController.getCharacter)
 router.get('/character/status', characterController.getCharacterStatus)

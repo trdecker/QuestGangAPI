@@ -5,6 +5,11 @@ const conditions = {
     FROZEN: "FROZEN"
 }
 
+const userActions = {
+    ATTACK: "attack",
+    RUN: "run"
+}
+
 const userStatus = {
     NOT_IN_QUEST: 'NOT_IN_QUEST',
     IN_QUEST: 'IN_QUEST',
@@ -21,6 +26,7 @@ const questStatus = {
 
 module.exports = {
     conditions,
+    userActions,
     questStatus,
     userStatus
 }

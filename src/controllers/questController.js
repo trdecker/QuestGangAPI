@@ -8,7 +8,7 @@ const questModel = require('../models/questModel')
 const locationModel = require('../models/locationModel')
 const characterModel = require('../models/characterModel')
 const monsterModel = require('../models/monsterModel')
-const { questStatus, userStatus } = require('../types')
+const { userActions, questStatus, userStatus } = require('../types')
 
 
 /**
@@ -83,6 +83,11 @@ async function requestQuests(req, res) {
             const location3 = locations.at(Math.floor(Math.random() * numLocations))
             const location4 = locations.at(Math.floor(Math.random() * numLocations))
 
+            location1.id = generateId()
+            location2.id = generateId()
+            location3.id = generateId()
+            location4.id = generateId()
+
             // Create arry of random monsters
             const monsters = []
             for (let i = 0; i < LOCATIONS_IN_QUEST-1; i++) {
@@ -109,25 +114,25 @@ async function requestQuests(req, res) {
                 locations: [
                     {
                         name: location1.name,
-                        locationId: location1.id,
+                        locationId: "1",
                         monsters: [],
-                        neighbors: [location2.id, location3.id]
+                        neighbors: ["2", "3"]
                     },
                     {
                         name: location2.name,
-                        locationId: location2.id,
+                        locationId: "2",
                         monsters: [monsters.at(1)],
-                        neighbors: [location4.id]
+                        neighbors: ["4"]
                     },
                     {
                         name: location3.name,
-                        locationId: location2.id,
+                        locationId: "3",
                         monsters: [monsters.at(2)],
-                        neighbors: [location4.id]
+                        neighbors: ["4"]
                     },
                     {
                         name: location4.name,
-                        locationId: location2.id,
+                        locationId: "4",
                         monsters: [bossMonster],
                         neighbors: []
                     }
@@ -195,11 +200,10 @@ async function acceptQuest(req, res) {
 
         // If quest not found, return 404
         if (foundQuests.length == 0) {
-            res.status(404).send('Character not found')
+            res.status(404).send('Quest not found')
             return
         }
         const quest = foundQuests[0]
-        console.log(quest)
 
         // Quest MUST be already associated with user
         if (quest.userId !== userId) {
@@ -215,14 +219,15 @@ async function acceptQuest(req, res) {
 
         // Change the chosen quest status to ACTIVE
         quest.status = questStatus.ACTIVE
-        questModel.updateStatus(questId, questStatus.ACTIVE)
+        questModel.updateStatus(questId, quest.status)
 
         // Delete all the quests that weren't chosen
         questModel.deleteCharacterQuests(userId, questStatus.NOT_ACTIVE)
 
         // If the first quest has a monster, put the player into combat!
         if (quest.locations[0].monsters.length > 0) {
-            characterModel.updateStatus(userId, userStatus.IN_COMBAT)
+            quest.status.userStatus = userStatus.IN_COMBAT
+            characterModel.updateStatus(userId, user.status)
 
             const json = {
                 monsters: quest.locations[0].monsters[0]
@@ -252,6 +257,11 @@ async function acceptQuest(req, res) {
     }
 }
 
+/**
+ * @description Leave a quest the user is in
+ * @param {Object} req 
+ * @param {Object} res 
+ */
 async function leaveQuest(req, res) {
     try {
         const userId = req.query.userId
@@ -285,11 +295,15 @@ async function leaveQuest(req, res) {
             return
         }
 
+        const newStatus = {
+            userStatus: "NOT_IN_QUEST"
+        }
+
         // Update the user to NOT_IN_QUEST
-        characterModel.updateStatus(userId, userStatus.NOT_IN_QUEST)
+        await characterModel.updateStatus(userId, newStatus)
 
         // Update the quest to INCOMPLETE
-        questModel.updateStatus(questId, questStatus.TERMINATED)
+        await questModel.updateStatus(questId, questStatus.TERMINATED)
 
         res.send('You have left the quest.')
     } catch (e) {
@@ -301,8 +315,179 @@ async function leaveQuest(req, res) {
     }
 }
 
+/**
+ * @description Make a choice. Right now just to change locations. Can ONLY be done when IN_QUEST and not IN_COMBAT!
+ * @param {Object} req 
+ * @param {Object} res 
+ */
+async function makeChoice(req, res) {
+    try {
+        const userId = req.body.userId
+        const choice = req.body.choice
+
+        if (!userId) {
+            res.status(400).send('User ID required')
+            return
+        }
+
+        if (!choice) {
+            res.status(400).send('Choice required')
+            return
+        }
+
+        // Get the current user
+        const foundUsers = await characterModel.getCharacter(userId)
+
+        // If the user doesn't exist, send a 404
+        if (foundUsers.length == 0) {
+            res.status(404).send('Character not found')
+            return
+        }
+
+        const user = foundUsers.at(0)
+
+        // The user MUST be IN_QUEST!
+        if (user.status.userStatus === userStatus.NOT_IN_QUEST) {
+            res.status(403).send('Not in a quest, no choice to make!')
+            return
+        }
+
+        if (user.status.userStatus === userStatus.IN_COMBAT) {
+            res.status(403).send('In combat, must make an action!')
+            return
+        }
+
+        if (user.status.userStatus === userStatus.DEAD) {
+            res.status(403).send('Character is dead. Make a new character to play again.')
+            return
+        }
+
+        const questId = user.status.questId
+        const choices = user.status.choices
+
+        if (!choices.includes(choice)) {
+            res.status(403).json({
+                message: 'That is not a valid choice!',
+                validChoices: choices
+            })
+            return
+        }
+
+        // Check if quest exists by finding it
+        const foundQuests = await questModel.getQuest(questId)
+
+        // If quest not found, return 404
+        if (foundQuests.length == 0) {
+            res.status(404).send('Quest not found')
+            return
+        }
+        const quest = foundQuests[0]
+
+        locations = quest.locations
+        chosenLocation = locations.find(loc => loc.locationId === choice)
+        user.status.locationId = choice
+
+        if (chosenLocation.monsters.length > 0) {
+            
+            user.status.userStatus = userStatus.IN_COMBAT
+            user.status.choices = []
+            user.status.actions = [
+                "attack",
+                "run"
+            ]
+        }
+        else if (chosenLocation.neighbors)  {
+            user.status.choices = chosenLocation.neighbors
+        }
+        else user.status.choices = []
+
+        await characterModel.updateStatus(userId, user.status)
+
+        res.json(user.status)
+    } catch (e) {
+        console.error(e)
+        res.status(500).send('Error making choice')
+    }
+}
+
+/**
+ * @description ONLY for use while in combat.
+ * @param {Object} req 
+ * @param {Object} res 
+ */
+async function doAction(req, res) {
+    try {
+        const userId = req.body.userId
+        const action = req.body.action
+
+
+        if (!userId) {
+            res.status(400).send('User ID required')
+            return
+        }
+
+        if (!action) {
+            res.status(400).send('Action required')
+            return
+        }
+
+        // Get the current user
+        const foundUsers = await characterModel.getCharacter(userId)
+
+        // If the user doesn't exist, send a 404
+        if (foundUsers.length == 0) {
+            res.status(404).send('Character not found')
+            return
+        }
+
+        const user = foundUsers.at(0)
+
+        // The user MUST be IN_COMBAT!
+        if (user.status.userStatus === userStatus.IN_QUEST || user.status.userStatus == userStatus.NOT_IN_QUEST) {
+            res.status(403).send('Character is not in combat!')
+            return
+        }
+
+        if (user.status.userStatus === userStatus.DEAD) {
+            res.status(403).send('Character is dead. Make a new character to play again.')
+            return
+        }
+
+        // Check that action is valid
+        const actions = user.status.actions
+
+        if (!actions.includes(action)) {
+            res.status(403).json({
+                message: 'That is not a valid action!',
+                validActions: actions
+            })
+            return
+        }
+
+        if (action == userActions.ATTACK) {
+            // Reduce monster's health by 5
+            // Check if monster is dead
+            // Monster fights back, reduce user's health by 4
+            // Check if user is dead
+        }
+        else if (action == userActions.RUN) {
+            // Random number 1-3; 1 is success
+            // If success, set userStatus to IN_QUEST
+            // Monster fights back, reduce user's health by 4
+            // Check if user is dead
+        }
+
+
+    } catch (e) {
+        console.error(e)
+        res.status(500).send('Error doing action')
+    }
+}
+
 module.exports = {
     requestQuests,
     acceptQuest,
-    leaveQuest
+    leaveQuest,
+    makeChoice,
+    doAction
 }
