@@ -19,6 +19,12 @@ router.get('/userClasses/random', userClassController.getRandomUserClass)
 router.get('/userClasses', userClassController.getUserClass)
 router.get('/')
 router.get('/monster/random', monsterController.getRandomMonster)
+// router.get('/monster', monsterController.getMonster)
+
+// router.get('/character', characterController.getCharacter)
+router.get('/characters/inventory', characterController.getCharacterInventory)
+router.get('/store', characterController.getStore)
+
 
 
 // ##### Quest routes #####
@@ -33,5 +39,7 @@ router.get('/quests/status')
 router.put('/quests/leave')
 
 // router.post('/character', characterController.createCharacter)
+router.put('/store', characterController.buyItem)
+
 
 module.exports = router
