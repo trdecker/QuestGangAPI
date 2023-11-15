@@ -20,6 +20,7 @@ router.get('/userClasses', userClassController.getUserClass)
 router.get('/')
 router.get('/monster/random', monsterController.getRandomMonster)
 
+
 // ##### Quest routes #####
 
 // Returns a list of Quests for the user to choose from. These are added to the database Quests, with the status "NOT_ACTIVE".
