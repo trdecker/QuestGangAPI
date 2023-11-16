@@ -19,6 +19,13 @@ router.get('/', (req, res) => {
     res.send('Hello world!')
 })
 router.get('/monster/random', monsterController.getRandomMonster)
+// router.get('/monster', monsterController.getMonster)
+
+// router.get('/character', characterController.getCharacter)
+router.get('/characters/inventory', characterController.getCharacterInventory)
+router.get('/store', characterController.getStore)
+
+
 
 // ##### Quest routes #####
 
@@ -30,6 +37,9 @@ router.put('/quests/accept', questController.acceptQuest)
 // router.get('/quests/status')
 // Leave a quest prematurely. Rewards for doing the quest are NOT attained.
 router.put('/quests/leave', questController.leaveQuest)
+
+// router.post('/character', characterController.createCharacter)
+router.put('/store', characterController.buyItem)
 
 router.put('/action', questController.doAction) // For use in combat
 router.put('/choice', questController.makeChoice) // For use while in quest
