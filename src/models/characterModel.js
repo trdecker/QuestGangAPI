@@ -75,5 +75,6 @@ async function updateStatus(userId, characterStatus) {
 module.exports = {
     createCharacter,
     getCharacter,
-    updateStatus
+    updateStatus,
+    userStatus
 }

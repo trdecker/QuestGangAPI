@@ -1,6 +1,7 @@
 const character = require('../models/characterModel')
 const { conditions, userStatus } = require('../types')
 const json = require('../../assets/items.json')
+const itemModel = require('../models/itemModel')
 
 function newCharacter(req, res) {
     try {
@@ -127,17 +128,24 @@ async function buyItem(req, res) {
     try {
         const username = req.body.username
         const itemId = req.body.itemId
-        const item = json.items.at(itemId)
-        const price = item.price
-        const character = await character.getCharacterWithUsername(username)
-        const gold = character.gold
-        if (gold < price) {
-            res.status(400).send('Not enough gold')
+        const test = json.items.find((item) => item.id == itemId)
+        console.log(test)
+        const test2 = await itemModel.getItem(itemId)
+        if (test2.length == 0) {
+            res.status(404).send('No item found with that id')
             return
         }
-        character.gold = gold - price
-        character.items.push({itemId: itemId})
-        character.save()
+        console.log(test2)
+        // const price = item.price
+        // const character = await character.getCharacterWithUsername(username)
+        // const gold = character.gold
+        // if (gold < price) {
+        //     res.status(400).send('Not enough gold')
+        //     return
+        // }
+        // character.gold = gold - price
+        // character.items.push({itemId: itemId})
+        // character.save()
         res.send("success")
     } catch (e) {
         console.error(e)
@@ -152,6 +160,4 @@ module.exports = {
     getCharacterInventory,
     getStore,
     buyItem
-    
-
 }
