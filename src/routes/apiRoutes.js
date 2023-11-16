@@ -32,5 +32,6 @@ router.get('/quests/status')
 router.put('/quests/leave')
 
 // router.post('/character', characterController.createCharacter)
+router.post('/signup', characterController.signup)
 
 module.exports = router
