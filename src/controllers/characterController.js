@@ -71,7 +71,19 @@ function newCharacter(req, res) {
     }
 }
 
+function signup(req, res) {
+    try {
+        console.log('body: ', req.body)
+        character.
+        res.send('Sign up success')
+    } catch (e) {
+        console.error(e)
+        res.status(500).send('Sign up fail')
+    }
+}
+
 
 module.exports = {
-    newCharacter
+    newCharacter,
+    signup
 }
