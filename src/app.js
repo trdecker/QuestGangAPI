@@ -20,11 +20,7 @@
     const URI = process.env.URI
 
     const corsOptions = {
-<<<<<<< HEAD
-        origin: ['http://localhost:3000', 'http://localhost:80', 'https://questgangapi.onrender.com', process.env.IP_1, process.env.IP_Mo],
-=======
-        origin: ['http://localhost:3000', 'http://localhost:80', 'https://questgangapi.onrender.com', process.env.IP_1, process.env.IP_GH],
->>>>>>> cbb3e32345a2756b34b31124b5bb80ca961574c5
+        origin: ['http://localhost:3000', 'http://localhost:80', 'https://questgangapi.onrender.com', process.env.IP_1, process.env.IP_Mo, process.env.IP_GH],
         methods: 'GET, PUT, POST, DELETE, HEAD, PATCH',
         credentials: true,
         allowedHeaders: 'Content-Type, Authorization'

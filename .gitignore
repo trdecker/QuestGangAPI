@@ -2,6 +2,7 @@
 .vscode
 .editorconfig
 node_modules
+/node_modules
 yarn.lock
 *.lock
 .env.local

@@ -99,5 +99,6 @@ module.exports = {
     createCharacter,
     getCharacter,
     getCharacterWithUsername,
-    updateStatus
+    updateStatus,
+    characterModel
 }

@@ -12,6 +12,7 @@ const userClassController = require('../controllers/userClassController')
 const monsterController = require('../controllers/monsterController')
 const characterController = require('../controllers/characterController')
 const questController = require('../controllers/questController')
+const testUserController = require('../controllers/testUserController')
 
 router.get('/userClasses/random', userClassController.getRandomUserClass)
 router.get('/userClasses', userClassController.getUserClass)
@@ -31,16 +32,14 @@ router.put('/quests/accept', questController.acceptQuest)
 // Leave a quest prematurely. Rewards for doing the quest are NOT attained.
 router.put('/quests/leave', questController.leaveQuest)
 
-<<<<<<< HEAD
-// router.post('/character', characterController.createCharacter)
-router.post('/signup', characterController.signup)
-=======
 router.put('/action', questController.doAction) // For use in combat
 router.put('/choice', questController.makeChoice) // For use while in quest
 
-// router.post('/character', characterController.newCharacter)
+router.post('/character', characterController.newCharacter)
+router.post('/character/signup', characterController.signup)
 router.get('/character', characterController.getCharacter)
 router.get('/character/status', characterController.getCharacterStatus)
->>>>>>> cbb3e32345a2756b34b31124b5bb80ca961574c5
+
+router.post('/testUser/signup', testUserController.testSignup)
 
 module.exports = router

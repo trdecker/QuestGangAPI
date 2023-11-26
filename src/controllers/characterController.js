@@ -81,28 +81,48 @@ function newCharacter(req, res) {
     }
 }
 
-<<<<<<< HEAD
-function signup(req, res) {
-    try {
-        console.log('body: ', req.body)
-        character.
-        res.send('Sign up success')
-    } catch (e) {
-        console.error(e)
-        res.status(500).send('Sign up fail')
-    }
-}
-
-
-module.exports = {
-    newCharacter,
-    signup
-=======
 /**
  * @description Get the details about a character
  * @param {Object} req 
  * @param {Object} res 
  */
+async function signup(req, res) {
+    try {
+        const username = req.body.username
+        const password = req.body.password
+
+        // Require a username and password
+        if (!username || !password) {
+            res.status(400).send('Username and password are required fields')
+            return
+        }
+
+        // Check if username is already taken
+        // const characters = await character.getCharacterWithUsername(username)
+
+        if (characters.length > 0) {
+            res.status(400).send('Username already taken')
+            return
+        }
+
+        // Create a new character
+        const newCharacter = new characterModel({
+            username,
+            password
+        })
+
+        newCharacter.save()
+        .then(() => res.json('Character added!'))
+        .catch(err => res.status(400).json('Error: ' + err))
+
+        // await character.createCharacter(newCharacter)
+
+        res.send('success')
+    } catch (e) {
+        console.error(e)
+        res.status(500).send('Error creating character')
+    }
+}
 async function getCharacter(req, res) {
     try {
         const username = req.query.username
@@ -179,6 +199,6 @@ async function getCharacterStatus(req, res) {
 module.exports = {
     newCharacter,
     getCharacter,
-    getCharacterStatus
->>>>>>> cbb3e32345a2756b34b31124b5bb80ca961574c5
+    getCharacterStatus,
+    signup
 }
