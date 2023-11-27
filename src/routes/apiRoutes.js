@@ -12,6 +12,7 @@ const userClassController = require('../controllers/userClassController')
 const monsterController = require('../controllers/monsterController')
 const characterController = require('../controllers/characterController')
 const questController = require('../controllers/questController')
+const testUserController = require('../controllers/testUserController')
 
 router.get('/userClasses/random', userClassController.getRandomUserClass)
 router.get('/userClasses', userClassController.getUserClass)
@@ -44,8 +45,11 @@ router.put('/store', characterController.buyItem)
 router.put('/action', questController.doAction) // For use in combat
 router.put('/choice', questController.makeChoice) // For use while in quest
 
-// router.post('/character', characterController.newCharacter)
+router.post('/character', characterController.newCharacter)
+router.post('/character/signup', characterController.signup)
 router.get('/character', characterController.getCharacter)
 router.get('/character/status', characterController.getCharacterStatus)
+
+router.post('/testUser/signup', testUserController.testSignup)
 
 module.exports = router
