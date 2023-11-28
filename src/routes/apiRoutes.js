@@ -13,6 +13,7 @@ const monsterController = require('../controllers/monsterController')
 const characterController = require('../controllers/characterController')
 const questController = require('../controllers/questController')
 const testUserController = require('../controllers/testUserController')
+const storeController = require('../controllers/storeController')
 
 router.get('/userClasses/random', userClassController.getRandomUserClass)
 router.get('/userClasses', userClassController.getUserClass)
