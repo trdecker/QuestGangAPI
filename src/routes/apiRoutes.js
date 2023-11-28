@@ -24,7 +24,7 @@ router.get('/monster/random', monsterController.getRandomMonster)
 
 // router.get('/character', characterController.getCharacter)
 router.get('/characters/inventory', characterController.getCharacterInventory)
-router.get('/store', characterController.getStore)
+router.get('/store', storeController.getStore)
 
 
 
@@ -40,7 +40,7 @@ router.put('/quests/accept', questController.acceptQuest)
 router.put('/quests/leave', questController.leaveQuest)
 
 // router.post('/character', characterController.createCharacter)
-router.put('/store', characterController.buyItem)
+router.put('/store', storeController.buyItem)
 
 router.put('/action', questController.doAction) // For use in combat
 router.put('/choice', questController.makeChoice) // For use while in quest

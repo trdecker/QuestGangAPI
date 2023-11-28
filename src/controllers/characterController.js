@@ -117,52 +117,6 @@ async function getCharacterInventory(req, res) {
     }
 }
 
-async function getStore(req, res) {
-    try {
-
-        const items = json.items
-        const store = []
-        for (let i = 0; i < 3; i++) {
-            store.push(items.at(Math.floor(Math.random() * items.length)))
-        }
-           
-    
-        res.json(store)
-    } catch (e) {
-        console.error(e)
-        res.status(500).send('Error getting store')
-    }
-}
-
-async function buyItem(req, res) {
-    try {
-        const username = req.body.username
-        const itemId = req.body.itemId
-        const test = json.items.find((item) => item.id == itemId)
-        console.log(test)
-        const test2 = await itemModel.getItem(itemId)
-        if (test2.length == 0) {
-            res.status(404).send('No item found with that id')
-            return
-        }
-        console.log(test2)
-        // const price = item.price
-        // const character = await character.getCharacterWithUsername(username)
-        // const gold = character.gold
-        // if (gold < price) {
-        //     res.status(400).send('Not enough gold')
-        //     return
-        // }
-        // character.gold = gold - price
-        // character.items.push({itemId: itemId})
-        // character.save()
-        res.send("success")
-    } catch (e) {
-        console.error(e)
-        res.status(500).send('Error buying item')
-    }
-}
-
 
 /**
  * @description Get the details about a character
@@ -283,7 +237,7 @@ module.exports = {
     newCharacter,
     getCharacterInventory,
     getStore,
-    buyItem
+    buyItem,
     getCharacter,
     getCharacterStatus,
     signup
