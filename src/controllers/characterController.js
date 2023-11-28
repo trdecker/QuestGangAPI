@@ -194,7 +194,8 @@ async function getCharacter(req, res) {
             hp: found.hp,
             armor: found.armor,
             items: found.items,
-            weapons: found.weapons
+            weapons: found.weapons,
+            gold: found.gold
         }
 
         res.json(json)
@@ -236,8 +237,6 @@ async function getCharacterStatus(req, res) {
 module.exports = {
     newCharacter,
     getCharacterInventory,
-    getStore,
-    buyItem,
     getCharacter,
     getCharacterStatus,
     signup

@@ -26,6 +26,19 @@ async function getStore(req, res) {
     }
 }
 
+async function sellItem(req, res) {
+    try {
+        const sellingItem = req.query.itemId
+        const username = req.body.username
+        
+        
+
+    } catch (e) {
+        console.error(e)
+        res.status(500).send('Error selling item')
+    }
+}
+
 async function buyItem(req, res) {
     try {
         const username = req.body.username
