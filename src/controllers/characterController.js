@@ -320,5 +320,5 @@ module.exports = {
     buyItem,
     getCharacter,
     getCharacterStatus,
-    signup
+    signup,
 }
