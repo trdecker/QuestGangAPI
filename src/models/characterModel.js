@@ -11,6 +11,7 @@ const characterSchema = new mongoose.Schema({
     name: String,
     userId: String,
     classId: Number,
+    gold: Number,
     status: {
         userStatus: String,
         choices: [String], // Include ONLY for when status is IN_QUEST
@@ -38,7 +39,7 @@ const characterSchema = new mongoose.Schema({
         damageMod: Number,
         condEffect: String,
         type: String
-    }]
+    }],
 })
 
 const characterModel = mongoose.model('character', characterSchema, 'characters')

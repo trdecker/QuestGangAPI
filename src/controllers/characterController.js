@@ -70,7 +70,8 @@ function newCharacter(req, res) {
             mana: 20,
             weapons,
             items,
-            armor
+            armor,
+            gold: 10
         }
 
         character.createCharacter(newCharacter)
@@ -163,7 +164,6 @@ async function buyItem(req, res) {
     }
 }
 
-
 /**
  * @description Get the details about a character
  * @param {Object} req 
@@ -240,7 +240,8 @@ async function getCharacter(req, res) {
             hp: found.hp,
             armor: found.armor,
             items: found.items,
-            weapons: found.weapons
+            weapons: found.weapons,
+            gold: found.gold
         }
 
         res.json(json)
