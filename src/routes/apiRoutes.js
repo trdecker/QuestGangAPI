@@ -41,7 +41,10 @@ router.put('/quests/accept', questController.acceptQuest)
 router.put('/quests/leave', questController.leaveQuest)
 
 // router.post('/character', characterController.createCharacter)
-router.put('/store', storeController.buyItem)
+router.put('/inventory/addItem', inventoryController.addItemtoInventory)
+router.put('/inventory/removeItem', inventoryController.removeItemfromInventory)
+router.put('/store/buy', storeController.buyItem)
+router.put('/store/sell', storeController.sellItem)
 
 router.put('/action', questController.doAction) // For use in combat
 router.put('/choice', questController.makeChoice) // For use while in quest

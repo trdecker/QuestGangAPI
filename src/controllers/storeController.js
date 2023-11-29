@@ -81,4 +81,5 @@ async function buyItem(req, res) {
 module.exports = {
     getStore,
     buyItem,
+    sellItem,
 }
