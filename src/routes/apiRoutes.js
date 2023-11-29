@@ -14,6 +14,7 @@ const characterController = require('../controllers/characterController')
 const questController = require('../controllers/questController')
 const testUserController = require('../controllers/testUserController')
 const storeController = require('../controllers/storeController')
+const authMiddleware = require('../middlewares/authMiddleware')
 
 router.get('/userClasses/random', userClassController.getRandomUserClass)
 router.get('/userClasses', userClassController.getUserClass)
@@ -35,16 +36,14 @@ router.get('/store', storeController.getStore)
 router.put('/quests/request', questController.requestQuests)
 // Choose a quest to begin. Pass the questId as a query. Quest is marked as "ACTIVE", TODO: and the rest are discarded.
 router.put('/quests/accept', questController.acceptQuest)
-// Returns status of quest.
-// router.get('/quests/status')
 // Leave a quest prematurely. Rewards for doing the quest are NOT attained.
 router.put('/quests/leave', questController.leaveQuest)
 
 // router.post('/character', characterController.createCharacter)
 router.put('/store', storeController.buyItem)
 
-router.put('/action', questController.doAction) // For use in combat
-router.put('/choice', questController.makeChoice) // For use while in quest
+router.put('/quest/action', questController.doAction) // For use in combat
+router.put('/quest/choice', questController.makeChoice) // For use while in quest
 
 router.post('/character', characterController.newCharacter)
 router.post('/character/signup', characterController.signup)
