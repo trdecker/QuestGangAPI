@@ -34,16 +34,14 @@ router.get('/store', characterController.getStore)
 router.put('/quests/request', questController.requestQuests)
 // Choose a quest to begin. Pass the questId as a query. Quest is marked as "ACTIVE", TODO: and the rest are discarded.
 router.put('/quests/accept', questController.acceptQuest)
-// Returns status of quest.
-// router.get('/quests/status')
 // Leave a quest prematurely. Rewards for doing the quest are NOT attained.
 router.put('/quests/leave', questController.leaveQuest)
 
 // router.post('/character', characterController.createCharacter)
 router.put('/store', characterController.buyItem)
 
-router.put('/action', questController.doAction) // For use in combat
-router.put('/choice', questController.makeChoice) // For use while in quest
+router.put('/quest/action', questController.doAction) // For use in combat
+router.put('/quest/choice', questController.makeChoice) // For use while in quest
 
 router.post('/character', characterController.newCharacter)
 router.post('/character/signup', characterController.signup)

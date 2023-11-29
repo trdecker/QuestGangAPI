@@ -16,8 +16,10 @@ const monsterModel = mongoose.model('monster', monsterSchema, 'monsters')
 
 async function getSpecifiedMonster(monsterId) {
     try {
-        const newMonster = await monsterModel.find({ monsterId: monsterId })
-        return newMonster
+        const result = await monsterModel.find({ monsterId: monsterId })
+        if (result.length === 0)
+            return null
+        else return result[0]
     } catch (e) {
         console.error('Error while getting monster')
         throw (e)
