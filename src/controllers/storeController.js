@@ -30,6 +30,16 @@ async function sellItem(req, res) {
     try {
         const sellingItem = req.query.itemId
         const username = req.body.username
+        const character = req.body.character
+        if (character.items.find((item) => item.itemId == sellingItem) == undefined) {
+            res.status(400).send('Item not in inventory')
+            return
+        }
+        else {
+            const sellPrice = json.items.find((item) => item.id == sellingItem).price
+        }
+
+
         
         
 

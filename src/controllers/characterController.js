@@ -70,7 +70,8 @@ function newCharacter(req, res) {
             mana: 20,
             weapons,
             items,
-            armor
+            armor,
+            gold: 10
         }
 
         character.createCharacter(newCharacter)
