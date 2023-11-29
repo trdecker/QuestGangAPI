@@ -283,8 +283,8 @@ module.exports = {
     newCharacter,
     getCharacterInventory,
     getStore,
-    buyItem
+    buyItem,
     getCharacter,
     getCharacterStatus,
-    signup
+    signup,
 }
