@@ -42,7 +42,7 @@ router.put('/quests/accept', questController.acceptQuest)
 router.put('/quests/leave', questController.leaveQuest)
 
 // router.post('/character', characterController.createCharacter)
-router.put('/inventory/addItem', inventoryController.addItemtoInventory) // general usage
+router.put('/inventory/addItem', inventoryController.addItemToInventory) // general usage
 router.put('/inventory/removeItem', inventoryController.removeItemfromInventory) //general usage
 router.put('/store/buy', storeController.buyItem)
 router.put('/store/sell', storeController.sellItem)
