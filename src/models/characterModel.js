@@ -43,7 +43,7 @@ const characterSchema = new mongoose.Schema({
         condEffect: String,
         type: String,
         equipped: Boolean
-    }],
+    }]
 })
 
 const characterModel = mongoose.model('character', characterSchema, 'characters')
