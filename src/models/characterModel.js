@@ -11,6 +11,9 @@ const characterSchema = new mongoose.Schema({
     name: String,
     userId: String,
     classId: Number,
+    attack: { type: Number, default: 1 },
+    defense: { type: Number, default: 1 },
+    gold: Number,
     status: {
         userStatus: String,
         choices: [String], // Include ONLY for when status is IN_QUEST
@@ -25,7 +28,8 @@ const characterSchema = new mongoose.Schema({
     armor: [{
         name: String,
         armorId: Number,
-        defense: Number
+        defense: Number,
+        equipped: Boolean
     }],
     items: [{
         name: String,
@@ -37,8 +41,9 @@ const characterSchema = new mongoose.Schema({
         weaponId: Number,
         damageMod: Number,
         condEffect: String,
-        type: String
-    }]
+        type: String,
+        equipped: Boolean
+    }],
 })
 
 const characterModel = mongoose.model('character', characterSchema, 'characters')
@@ -59,8 +64,11 @@ function createCharacter(character) {
  */
 async function getCharacter(userId) {
     try {
-        const character = await characterModel.find({ userId: userId }).exec()
-        return character
+        const characters = await characterModel.find({ userId: userId }).exec()
+        if (characters.length === 0)
+            return null
+        console.log('getCharacter in characterModel.js:', characters)
+        return characters.at(0)
     } catch (e) {
         console.error('Error while getting character')
         throw (e)

@@ -2,6 +2,7 @@ const character = require('../models/characterModel')
 const { conditions, userStatus } = require('../types')
 const json = require('../../assets/items.json')
 const itemModel = require('../models/itemModel')
+const questModel = require('../models/questModel')
 
 /**
  * @deprecated Replace with sign in call
@@ -70,7 +71,8 @@ function newCharacter(req, res) {
             mana: 20,
             weapons,
             items,
-            armor
+            armor,
+            gold: 10
         }
 
         character.createCharacter(newCharacter)
@@ -163,9 +165,8 @@ async function buyItem(req, res) {
     }
 }
 
-
 /**
- * @description Get the details about a character
+ * @description Sign up
  * @param {Object} req 
  * @param {Object} res 
  */
@@ -206,6 +207,7 @@ async function signup(req, res) {
         res.status(500).send('Error creating character')
     }
 }
+
 async function getCharacter(req, res) {
     try {
         const username = req.query.username
@@ -240,7 +242,8 @@ async function getCharacter(req, res) {
             hp: found.hp,
             armor: found.armor,
             items: found.items,
-            weapons: found.weapons
+            weapons: found.weapons,
+            gold: found.gold
         }
 
         res.json(json)
@@ -276,35 +279,33 @@ async function getCharacterStatus(req, res) {
         }
 
         // Return the character WITHOUT the hashed password
-        const found = characters.at(0)
+        const user = characters.at(0)
 
-        // TODO: If in combat, display the monsters you are fighting
         // TODO: Retrieve class associated with classId and return the class information
-        if (found.status.userStatus === userStatus.IN_COMBAT) {
-            // const quest = questModel.get
+        const result = {
+            status: user.status,
+            name: user.name,
+            userId: user.userId,
+            classId: user.classId,
+            condition: user.condition,
+            level: user.level,
+            mana: user.mana,
+            hp: user.hp,
+            attack: user.attack,
+            defense: user.defense
+        }
+        if (user.status.userStatus === userStatus.IN_COMBAT) {
+            const quest = await questModel.getQuest(user.status.questId)
+            console.log(quest)
+            const location = quest.locations.find((location) => location.locationId === user.status.locationId)
+            console.log('location:', location)
             res.json({
-                status: found.status,
-                name: found.name,
-                userId: found.userId,
-                classId: found.classId,
-                condition: found.condition,
-                level: found.level,
-                mana: found.mana,
-                hp: found.hp,
-                monstersInCombat: []
+                ...result,
+                monstersInCombat: [location.monsters] // TODO: populate this field!
             })
         }
         else {
-            res.json({
-                status: found.status,
-                name: found.name,
-                userId: found.userId,
-                classId: found.classId,
-                condition: found.condition,
-                level: found.level,
-                mana: found.mana,
-                hp: found.hp
-            })
+            res.json(result)
         }
         
     } catch (e) {

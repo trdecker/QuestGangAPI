@@ -10,9 +10,8 @@ const characterModel = require('../models/characterModel')
 const monsterModel = require('../models/monsterModel')
 const { userActions, questStatus, userStatus } = require('../types')
 
-
 /**
- * Generates a random ID using the current date and a random number 0-10000.
+ * Generates a random ID using the current date and a random number 0-10000
  * @returns {String} random ID
  */
 function generateId() {
@@ -51,16 +50,13 @@ async function requestQuests(req, res) {
         }
 
         // Get the current user
-        const foundUsers = await characterModel.getCharacter(userId)
+        const user = await characterModel.getCharacter(userId)
 
         // If the user doesn't exist, send a 404
-        if (foundUsers.length === 0) {
+        if (!user) {
             res.status(404).send('Character not found')
             return
         }
-
-        // // If the user is already in a quest, don't let them get a new one!
-        const user = foundUsers.at(0)
 
         if (user.status.userStatus === userStatus.DEAD) {
             res.status(403).send('User is DEAD. Create a new character to start over!')
@@ -204,14 +200,13 @@ async function acceptQuest(req, res) {
         }
 
         // Get the current user
-        const foundUsers = await characterModel.getCharacter(userId)
+        const user = await characterModel.getCharacter(userId)
 
         // If the user doesn't exist, send a 404
-        if (foundUsers.length === 0) {
+        if (!user) {
             res.status(404).send('Character not found')
             return
         }
-        const user = foundUsers.at(0)
 
         // If the user is already in a quest, don't let them get a new one!
         if (user.status.userStatus !== userStatus.NOT_IN_QUEST) {
@@ -295,14 +290,13 @@ async function leaveQuest(req, res) {
         }
 
         // Get the current user
-        const foundUsers = await characterModel.getCharacter(userId)
+        const user = await characterModel.getCharacter(userId)
 
         // If the user doesn't exist, send a 404
-        if (foundUsers.length === 0) {
+        if (!user) {
             res.status(404).send('Character not found')
             return
         }
-        const user = foundUsers.at(0)
 
         // If the user is in combat, don't let them leave!
         if (user.status.userStatus === userStatus.IN_COMBAT) {
@@ -357,15 +351,13 @@ async function makeChoice(req, res) {
         }
 
         // Get the current user
-        const foundUsers = await characterModel.getCharacter(userId)
+        const user = await characterModel.getCharacter(userId)
 
         // If the user doesn't exist, send a 404
-        if (foundUsers.length === 0) {
+        if (!user) {
             res.status(404).send('Character not found')
             return
         }
-
-        const user = foundUsers.at(0)
 
         const questId = user.status.questId
         const choices = user.status.choices
@@ -457,15 +449,14 @@ async function doAction(req, res) {
         }
 
         // Get the current user
-        const foundUsers = await characterModel.getCharacter(userId)
+        const user = await characterModel.getCharacter(userId)
 
         // If the user doesn't exist, send a 404
-        if (foundUsers.length === 0) {
+        if (!user) {
             res.status(404).send('Character not found')
             return
         }
 
-        const user = foundUsers.at(0)
         const questId = user.status.questId
 
         // The user MUST be IN_COMBAT!
@@ -480,14 +471,13 @@ async function doAction(req, res) {
         }
 
         // Get the quest
-        const foundQuests = await questModel.getQuest(questId)
+        const quest = await questModel.getQuest(questId)
 
         // If quest not found, return 404
-        if (foundQuests.length === 0) {
+        if (!quest) {
             res.status(404).send('Quest not found')
             return
         }
-        const quest = foundQuests.at(0)
 
         // Get location in quest
         const location = quest.locations.find((loc) => loc.locationId === user.status.locationId)
@@ -515,11 +505,19 @@ async function doAction(req, res) {
             return
         }
 
+        
+        // Get the user's equipped weapon
+        const weapon = user.weapons.find((weapon) => weapon.equipped === true)
+        console.log('equipped weapon:', weapon)
+        // Get the user's armor
+        const armor = user.armor.find((armor) => armor.equipped === true)
+        console.log('armor: ', armor)
+
         // If a user tries to ATTACK
         if (action === userActions.ATTACK) {
             console.log('in attack')
-            // Reduce monster's health by 5 TODO: Make this change with the user's level, weapon, etc.
-            const monsterDamage = 5
+            // Reduce monster's health by the user's attack and the damageMod of the weapon they're useing
+            const monsterDamage = user.attack + weapon.damageMod // FIXME: Change the name of this value to "attack"
             monster.hp -= monsterDamage
             // Raise to zero if negative
             if (monster.hp < 0)
@@ -592,8 +590,11 @@ async function doAction(req, res) {
             }
 
             // Monster fights back, reducing user's health
-            const userDamage = monster.attack
-            user.hp -= userDamage
+            const monsterAttack = monster.attack - user.defense - armor.defense
+            // If monster attack is negative, raise to 1 (no attack does no damage)
+            if (monsterAttack <= 0)
+                monsterAttack = 1
+            user.hp -= monsterAttack
 
             if (user.hp < 0) {
                 user.hp = 0
@@ -616,7 +617,7 @@ async function doAction(req, res) {
                 console.log('user has died')
 
                 res.json({
-                    message: `You attacked the ${monster.monsterName}, inflicting ${monsterDamage} damage. The ${monster.monsterName} attacked back, doing ${userDamage} damage, and you died. GAME OVER`,
+                    message: `You attacked the ${monster.monsterName}, inflicting ${monsterDamage} damage. The ${monster.monsterName} attacked back, doing ${monsterAttack} damage, and you died. GAME OVER`,
                     locationOfDeath: location.name,
                     killer: monster.monsterName,
                     character: {
@@ -634,7 +635,7 @@ async function doAction(req, res) {
             // Else just update the user of the conditions of the fight.
             else {
                 res.json({
-                    message: `You attacked the ${monster.monsterName}, inflicting ${monsterDamage} damage. The ${monster.monsterName} attacked back, doing ${userDamage} damage.`,
+                    message: `You attacked the ${monster.monsterName}, inflicting ${monsterDamage} damage. The ${monster.monsterName} attacked back, doing ${monsterAttack} damage.`,
                     status: user.status,
                     monsters: location.monsters,
                     character: {
@@ -690,9 +691,9 @@ async function doAction(req, res) {
             }
             // If failure, user is damaged
             else {
-                // Monster fights back, reduce user's health by 4 // TODO: Change dynamically
-                const userDamage = 4
-                user.hp -= 4
+                // Monster fights back, reduce user's health by 4
+                const monsterAttack = monster.attack
+                user.hp -= monsterAttack
                 // Raise to zero if negative
                 user.hp < 0 ? user.hp = 0 : null
                 await characterModel.updateCharacterStats(user)
@@ -711,7 +712,7 @@ async function doAction(req, res) {
                     console.log('user has died')
                     
                     res.json({
-                        message: `You failed to run away, and the ${monster.monsterName} inflicted ${userDamage} damage, and you died. GAME OVER`,
+                        message: `You failed to run away, and the ${monster.monsterName} inflicted ${monsterAttack} damage, and you died. GAME OVER`,
                         locationOfDeath: location.name,
                         killer: monster.monsterName,
                         character: {
@@ -725,11 +726,10 @@ async function doAction(req, res) {
                             hp: user.hp
                         }
                     })
-    
                 }
                 else {
                     res.json({
-                        message: `You failed to run away, and the ${monster.monsterName} inflicted ${userDamage} damage.`,
+                        message: `You failed to run away, and the ${monster.monsterName} inflicted ${monsterAttack} damage.`,
                         status: user.status,
                         character: {
                             status: user.status,
