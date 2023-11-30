@@ -31,18 +31,17 @@ async function sellItem(req, res) {
         const sellingItem = req.query.itemId
         const username = req.body.username
         const character = req.body.character
-        if (character.items.find((item) => item.itemId == sellingItem) == undefined) {
+        if (!character || !character.items) {
+            res.status(400).send('Invalid character or character items');
+            return;
+        }
+        else if (character.items.find((item) => item.itemId == sellingItem) == undefined) {
             res.status(400).send('Item not in inventory')
             return
         }
         else {
             const sellPrice = json.items.find((item) => item.id == sellingItem).price
         }
-
-
-        
-        
-
     } catch (e) {
         console.error(e)
         res.status(500).send('Error selling item')
