@@ -23,9 +23,11 @@ const questSchema = new mongoose.Schema({
             level: Number,
             attack: Number,
             defense: Number,
+            hp: Number,
             specialFeature: String,
             symbol: String,
-            monsterID: Number,
+            id: String,
+            boss: Boolean,
             condition: String
         }],
         neighbors: [{ type: String }]
@@ -77,6 +79,36 @@ async function getQuest(questId) {
     }
 }
 
+async function editMonsterInLocation(questId, locationId, monsterId, updatedMonsterData) {
+    try {
+        await questModel.findOneAndUpdate(
+            { 
+                questId: questId
+            },
+            {
+                $set: {
+                    'locations.$[outer].monsters.$[inner]': updatedMonsterData
+                }
+            },
+            { 
+                arrayFilters: [
+                    { 'outer.locationId': locationId },
+                    { 'inner.id': monsterId }
+                ],
+                new: true
+            }
+        )
+    } catch (e) {
+        console.error(`Error in editing monster ${monsterId} in location ${locationId} in quest ${questId}`)
+        throw (e)
+    }
+}
+
+/**
+ * Update the status of the user. NOT the same as updateStatus in characterModel.js!
+ * @param {String} questId
+ * @param {Object} questStatus
+ */
 async function updateStatus (questId, questStatus) {
     try {
         await questModel.findOneAndUpdate(
@@ -94,5 +126,6 @@ module.exports = {
     saveQuest,
     getQuest,
     deleteCharacterQuests,
+    editMonsterInLocation,
     updateStatus
 }

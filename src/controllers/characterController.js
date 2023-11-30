@@ -98,7 +98,7 @@ async function getCharacterInventory(req, res) {
         const characters = await character.getCharacterWithUsername(username)
  
         // Return 404 if no user found
-        if (characters.length == 0) {
+        if (characters.length === 0) {
             res.status(404).send('No character found with that username')
             return
         }
@@ -118,6 +118,51 @@ async function getCharacterInventory(req, res) {
     }
 }
 
+async function getStore(req, res) {
+    try {
+
+        const items = json.items
+        const store = []
+        for (let i = 0; i < 3; i++) {
+            store.push(items.at(Math.floor(Math.random() * items.length)))
+        }
+           
+    
+        res.json(store)
+    } catch (e) {
+        console.error(e)
+        res.status(500).send('Error getting store')
+    }
+}
+
+async function buyItem(req, res) {
+    try {
+        const username = req.body.username
+        const itemId = req.body.itemId
+        const test = json.items.find((item) => item.id === itemId)
+        console.log(test)
+        const test2 = await itemModel.getItem(itemId)
+        if (test2.length === 0) {
+            res.status(404).send('No item found with that id')
+            return
+        }
+        console.log(test2)
+        // const price = item.price
+        // const character = await character.getCharacterWithUsername(username)
+        // const gold = character.gold
+        // if (gold < price) {
+        //     res.status(400).send('Not enough gold')
+        //     return
+        // }
+        // character.gold = gold - price
+        // character.items.push({itemId: itemId})
+        // character.save()
+        res.send("success")
+    } catch (e) {
+        console.error(e)
+        res.status(500).send('Error buying item')
+    }
+}
 
 /**
  * @description Get the details about a character
@@ -175,7 +220,7 @@ async function getCharacter(req, res) {
         const characters = await character.getCharacterWithUsername(username)
 
         // Return 404 if no user found
-        if (characters.length == 0) {
+        if (characters.length === 0) {
             res.status(404).send('No character found with that username')
             return
         }
@@ -206,6 +251,12 @@ async function getCharacter(req, res) {
     }
 }
 
+/**
+ * Returns the status objects along with the users hp, level, gold, condition, class, and mana.
+ * @param {Object} req 
+ * @param {Object} res 
+ * @returns 
+ */
 async function getCharacterStatus(req, res) {
     try {
         const username = req.query.username
@@ -220,7 +271,7 @@ async function getCharacterStatus(req, res) {
         const characters = await character.getCharacterWithUsername(username)
 
         // Return 404 if no user found
-        if (characters.length == 0) {
+        if (characters.length === 0) {
             res.status(404).send('No character found with that username')
             return
         }
@@ -228,7 +279,35 @@ async function getCharacterStatus(req, res) {
         // Return the character WITHOUT the hashed password
         const found = characters.at(0)
 
-        res.json(found.status)
+        // TODO: If in combat, display the monsters you are fighting
+        // TODO: Retrieve class associated with classId and return the class information
+        if (found.status.userStatus === userStatus.IN_COMBAT) {
+            // const quest = questModel.get
+            res.json({
+                status: found.status,
+                name: found.name,
+                userId: found.userId,
+                classId: found.classId,
+                condition: found.condition,
+                level: found.level,
+                mana: found.mana,
+                hp: found.hp,
+                monstersInCombat: []
+            })
+        }
+        else {
+            res.json({
+                status: found.status,
+                name: found.name,
+                userId: found.userId,
+                classId: found.classId,
+                condition: found.condition,
+                level: found.level,
+                mana: found.mana,
+                hp: found.hp
+            })
+        }
+        
     } catch (e) {
         console.error(e)
         res.status(500).send('Error getting character')
@@ -238,7 +317,9 @@ async function getCharacterStatus(req, res) {
 module.exports = {
     newCharacter,
     getCharacterInventory,
+    getStore,
+    buyItem,
     getCharacter,
     getCharacterStatus,
-    signup
+    signup,
 }
