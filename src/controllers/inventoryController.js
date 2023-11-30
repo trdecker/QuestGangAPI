@@ -6,7 +6,6 @@ const itemModel = require("../models/itemModel");
 async function addItemtoInventory(req, res) {
   //assume character is verified
   try {
-    const username = req.body.username;
     const itemId = req.body.itemId;
     const test = json.items.find((item) => item.id == itemId);
     console.log(test);
@@ -20,6 +19,7 @@ async function addItemtoInventory(req, res) {
       await character.updateOne({ inventory: inventory });
       res.json(character);
     }
+    
   } catch (e) {
     console.error(e);
     res.status(500).send("Error adding item to inventory");
@@ -29,7 +29,6 @@ async function addItemtoInventory(req, res) {
 async function removeItemfromInventory(req, res) {
   //assume character is verified
   try {
-    const username = req.body.username;
     const itemId = req.body.itemId;
     const test = json.items.find((item) => item.id == itemId);
     console.log(test);
@@ -43,6 +42,7 @@ async function removeItemfromInventory(req, res) {
       await character.updateOne({ inventory: inventory });
       res.json(character);
     }
+
   } catch (e) {
     console.error(e);
     res.status(500).send("Error adding item to inventory");
