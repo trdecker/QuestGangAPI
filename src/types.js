@@ -21,6 +21,7 @@ const questStatus = {
     NOT_ACTIVE: 'NOT_ACTIVE',
     ACTIVE: 'ACTIVE',
     COMPLETE: 'COMPLETE',
+    FAILED: 'FAILED',
     TERMINATED: 'TERMINATED'
 }
 

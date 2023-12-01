@@ -95,6 +95,11 @@ async function getCharacterWithUsername(username) {
     }
 }
 
+/**
+ * Update the character status. CharacterStatus object MUST follow the status schema given in characterModel.js!
+ * @param {String} userId 
+ * @param {Object} characterStatus 
+ */
 async function updateStatus(userId, characterStatus) {
     try {
         await characterModel.findOneAndUpdate(
@@ -108,12 +113,34 @@ async function updateStatus(userId, characterStatus) {
     }
 }
 
+/**
+ * Update the stats of a character, which include their condition, level, mana, or hp. TODO: Separate levelling up in a different function?
+ * @param {Object} user 
+ */
+async function updateCharacterStats(user) {
+    try {
+        await characterModel.findOneAndUpdate(
+            { userId: user.userId },
+            { $set: { 
+                condition: user.condition,
+                level: user.level,
+                mana: user.mana,
+                hp: user.hp
+             } }, 
+            { new: true }
+        )
+    } catch (e) {
+        console.error('Error updating character stats')
+        throw (e)
+    }
+}
+
 module.exports = {
     createCharacter,
     getCharacter,
     updateStatus,
-    userStatus,
     getCharacterWithUsername,
     updateStatus,
+    updateCharacterStats,
     characterModel
 }
