@@ -208,6 +208,11 @@ async function signup(req, res) {
     }
 }
 
+/**
+ * Get the character. User will pass username as a query
+ * @param {Object} req 
+ * @param {Object} res 
+ */
 async function getCharacter(req, res) {
     try {
         const username = req.query.username

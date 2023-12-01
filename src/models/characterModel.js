@@ -67,7 +67,6 @@ async function getCharacter(userId) {
         const characters = await characterModel.find({ userId: userId }).exec()
         if (characters.length === 0)
             return null
-        console.log('getCharacter in characterModel.js:', characters)
         return characters.at(0)
     } catch (e) {
         console.error('Error while getting character')

@@ -215,14 +215,13 @@ async function acceptQuest(req, res) {
         }
 
         // Check if quest exists by finding it
-        const foundQuests = await questModel.getQuest(questId)
+        const quest = await questModel.getQuest(questId)
 
         // If quest not found, return 404
-        if (foundQuests.length === 0) {
+        if (!quest) {
             res.status(404).send('Quest not found')
             return
         }
-        const quest = foundQuests[0]
 
         // Quest MUST be already associated with user
         if (quest.userId !== userId) {
@@ -359,18 +358,22 @@ async function makeChoice(req, res) {
             return
         }
 
+        console.log(user)
+
         const questId = user.status.questId
         const choices = user.status.choices
 
-        // Check if quest exists by finding it
-        const foundQuests = await questModel.getQuest(questId)
+        console.log(questId)
 
-        // If quest not found, return 404
-        if (foundQuests.length === 0) {
+        // Check if quest exists by finding it
+        const quest = await questModel.getQuest(questId)
+
+        console.log(quest)
+
+        if (!quest) {
             res.status(404).send('Quest not found')
             return
         }
-        const quest = foundQuests[0]
 
         // The user MUST be IN_QUEST!
         if (user.status.userStatus === userStatus.NOT_IN_QUEST) {
@@ -505,9 +508,12 @@ async function doAction(req, res) {
             return
         }
 
+        console.log(user.weapons)
+
+        // TODO: Separate this out into "user's turn" and "monster's turn" for simplity's sake.
         
-        // Get the user's equipped weapon
-        const weapon = user.weapons.find((weapon) => weapon.equipped === true)
+        // Get the user's equipped weapon FIXME: user.weapons is returning as undefined!
+        const weapon = user.weapons ? user.weapons.find((weapon) => weapon.equipped === true) : null
         console.log('equipped weapon:', weapon)
         // Get the user's armor
         const armor = user.armor.find((armor) => armor.equipped === true)
@@ -517,7 +523,9 @@ async function doAction(req, res) {
         if (action === userActions.ATTACK) {
             console.log('in attack')
             // Reduce monster's health by the user's attack and the damageMod of the weapon they're useing
-            const monsterDamage = user.attack + weapon.damageMod // FIXME: Change the name of this value to "attack"
+            let monsterDamage = user.attack
+            if (weapon)
+                monsterDamage += weapon.damageMod // FIXME: Change the name of this value to "attack"
             monster.hp -= monsterDamage
             // Raise to zero if negative
             if (monster.hp < 0)
@@ -589,8 +597,10 @@ async function doAction(req, res) {
                 return
             }
 
-            // Monster fights back, reducing user's health
-            const monsterAttack = monster.attack - user.defense - armor.defense
+            // Monster fights back, reducing user's health TODO: Create function to do this (attackUser)
+            let monsterAttack = monster.attack - user.defense
+            if (armor)
+                monsterAttack -= armor.defense
             // If monster attack is negative, raise to 1 (no attack does no damage)
             if (monsterAttack <= 0)
                 monsterAttack = 1
@@ -651,7 +661,8 @@ async function doAction(req, res) {
                 })
             }
         }
-        // If a user tries to RUN
+
+        // #### If a user tries to RUN ####
         else if (action === userActions.RUN) {
             // Random number 1-3; 1 is success
             const randomNumber = Math.floor(Math.random() * 3) + 1
@@ -692,7 +703,9 @@ async function doAction(req, res) {
             // If failure, user is damaged
             else {
                 // Monster fights back, reduce user's health by 4
-                const monsterAttack = monster.attack
+                let monsterAttack = monster.attack
+                if (armor)
+                    monsterAttack -= armor.defense
                 user.hp -= monsterAttack
                 // Raise to zero if negative
                 user.hp < 0 ? user.hp = 0 : null
