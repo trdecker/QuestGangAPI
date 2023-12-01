@@ -47,6 +47,7 @@ router.put('/choice', questController.makeChoice) // For use while in quest
 
 router.post('/character', characterController.newCharacter)
 router.post('/character/signup', characterController.signup)
+router.post('/character/login', characterController.login)
 router.get('/character', characterController.getCharacter)
 router.get('/character/status', characterController.getCharacterStatus)
 
