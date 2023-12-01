@@ -14,7 +14,7 @@ const characterController = require('../controllers/characterController')
 const questController = require('../controllers/questController')
 const testUserController = require('../controllers/testUserController')
 const storeController = require('../controllers/storeController')
-const authMiddleware = require('../middlewares/authMiddleware')
+//const authMiddleware = require('../middlewares/authMiddleware')
 const inventoryController = require('../controllers/inventoryController')
 
 router.get('/userClasses/random', userClassController.getRandomUserClass)

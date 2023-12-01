@@ -1,5 +1,5 @@
-import jwt from "jsonwebtoken"
-import config from "../config/config.js"
+/*const jwt = require("jsonwebtoken")
+const config = require("../config/config.js")
 
 export function requireAuth (req, res, next) {
     const token = req.headers.authorization
@@ -21,4 +21,4 @@ export function requireAuth (req, res, next) {
       // Invalid token, respond with an error
       res.status(401).json({ error: 'Unauthorized' })
     }
-  }
+  }*/

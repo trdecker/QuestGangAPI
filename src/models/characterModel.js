@@ -58,13 +58,15 @@ function createCharacter(character) {
  * @param {String} userId 
  * @returns {Object} The character found
  */
+
 async function getCharacter(userId) {
     try {
-        const character = await characterModel.find({ userId: userId }).exec()
-        return character
+        const character = await characterModel.findOne({ userId: userId }).exec();
+        return character;
+        
     } catch (e) {
-        console.error('Error while getting character')
-        throw (e)
+        console.error('Error while getting character');
+        throw (e);
     }
 }
 
