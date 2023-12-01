@@ -2,7 +2,13 @@ const characterModel = require('../models/characterModel')
 const bcrypt = require('bcrypt')
 const { conditions, userStatus } = require('../types')
 const characterController = require('../controllers/characterController');
-import jwt from 'jsonwebtoken'
+const jwt = require('jsonwebtoken');
+
+
+const { config } = require('dotenv');
+
+
+
 
 
 /**
@@ -109,8 +115,19 @@ async function login(req, res){
 
         const match = await bcrypt.compare(password, found.password)
 
+        const payload = {
+            userId: found.userId,
+            username: found.username
+        }
+
+
         if (match) {
-            res.send('success')
+            const token = jwt.sign(payload, process.env.KEY, {expiresIn: '3h'})
+            res.json({
+                username,
+                userId: found.userId,
+                token
+            })
         } else {
             res.status(400).send('Incorrect password')
         }
@@ -157,7 +174,7 @@ async function signup(req, res) {
         // characterController.newCharacter(character)
 
         character.save()
-        .then(() => res.json('Character added!')).send('success')
+        .then(() => res.json('Character added!').send('success'))
         .catch(err => res.status(400).json('Error: ' + err))
 
 

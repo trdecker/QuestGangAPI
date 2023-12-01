@@ -4,13 +4,17 @@
  */
 
 const mongoose = require('mongoose')
+const quest = require('./questModel')
 const tempClassID = Math.floor(Math.random() * 3) + 1
+const now = Date.now()
+const rand = Math.floor(Math.random() * 10000)
+const userId = now.toString() + rand.toString()
 
 const characterSchema = new mongoose.Schema({
     username: String,
     password: String, // TODO: HASH THIS
     name: {type: String, default: "testUser"},
-    userId: {type: String, default: ""},
+    userId: {type: String, default: userId},
     classId:{type: Number, default: tempClassID},
     gold: {type: Number, default: 10},
     status: {
