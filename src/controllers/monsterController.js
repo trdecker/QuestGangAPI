@@ -7,21 +7,23 @@ async function getRandomMonster(req, res) {
         console.log("In get random monster")
         // Generate a random monster ID between 1 and 10
         const monsterId = Math.floor(Math.random() * 10) + 1
-        // console.log(monsterId)
 
         // Await the retrieval of the monster from the model using the generated monster ID
         const randomMonster = await monsterModel.getSpecifiedMonster(monsterId)
-        // console.log("Monster: " + randomMonster)
-        /************************
-         * TODO:
-         * Monsters need to be scaled to character level.
-         * monsters have an attack and defense that should
-         * be multiplied by the user's level.
-         * **********************/
 
-        if (randomMonster?.length > 0) {
-            // Respond with the retrieved monster in JSON format
-            res.json(randomMonster[0])
+        // TODO: Implement user level from request, defaulting to 1 if not provided
+        const userLevel = req.query.userLevel || 1; // Assuming user level is passed as a query parameter
+
+        // Scale monster stats based on user level
+        if (randomMonster && randomMonster.length > 0) {
+            const scaledMonster = {
+                ...randomMonster[0],
+                attack: randomMonster[0].attack * userLevel,
+                defense: randomMonster[0].defense * userLevel
+            };
+
+            // Respond with the scaled monster in JSON format
+            res.json(scaledMonster);
         } else {
             // Else send a 404
             res.status(404).json({ error: 'Monster not found' })
@@ -34,7 +36,7 @@ async function getRandomMonster(req, res) {
         // Respond with a 500 status code and an error message in JSON format
         res.status(500).json({
             error: 'Internal Server Error',
-            description: e
+            description: err.message // Changed 'e' to 'err.message' for correct error messaging
         });
     }
 }
