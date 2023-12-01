@@ -4,6 +4,8 @@
  */
 
 const mongoose = require('mongoose')
+const itemSchema = require('./itemModel').itemSchema
+const itemModel = require("../models/itemModel");
 
 const characterSchema = new mongoose.Schema({
     username: String,
@@ -28,11 +30,7 @@ const characterSchema = new mongoose.Schema({
         armorId: Number,
         defense: Number
     }],
-    items: [{
-        name: String,
-        type: String,
-        mod: Number
-    }],
+    items: [itemSchema],
     weapons: [{
         name: String,
         weaponId: Number,
@@ -125,6 +123,38 @@ async function updateCharacterStats(user) {
     }
 }
 
+async function addItemToInventory(req, res) {
+    try {
+        const { characterId, itemId } = req.body;
+  
+        // Fetch item details from the item database/model.
+        const item = await itemModel.getItem(itemId);
+        if (!item) {
+            console.log("Item not found");
+            return res.status(404).send("Item not found");
+        }
+  
+        // Use findOneAndUpdate on the character model
+        const updatedCharacter = await characterModel.findOneAndUpdate(
+          { userId: characterId },
+          { $push: { items: item } },
+          { new: true }
+      );
+  
+        if (!updatedCharacter) {
+            console.log("Character not found");
+            return res.status(404).send("Character not found");
+        }
+  
+        console.log('Item added successfully', updatedCharacter);
+        res.json(updatedCharacter); // Sending the updated character as a response
+    } catch (e) {
+        console.error(e);
+        res.status(500).send("Error adding item to inventory");
+    }
+  }
+
+  
 module.exports = {
     createCharacter,
     getCharacter,
@@ -132,5 +162,6 @@ module.exports = {
     getCharacterWithUsername,
     updateStatus,
     updateCharacterStats,
-    characterModel
+    characterModel,
+    addItemToInventory,
 }
