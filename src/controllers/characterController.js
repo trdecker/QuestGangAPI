@@ -1,10 +1,20 @@
-const character = require('../models/characterModel')
+const characterModel = require('../models/characterModel')
+const bcrypt = require('bcrypt')
 const { conditions, userStatus } = require('../types')
 const json = require('../../assets/items.json')
 const itemModel = require('../models/itemModel')
+const characterController = require('../controllers/characterController');
+const jwt = require('jsonwebtoken');
+
+
+const { config } = require('dotenv');
+
+
+
+
 
 /**
- * @deprecated Replace with sign in call
+ * // 
  * @param {Object} req 
  * @param {Object} res 
  */
@@ -74,7 +84,8 @@ function newCharacter(req, res) {
             gold: 10
         }
 
-        character.createCharacter(newCharacter)
+        req.body.createCharacter(newCharacter)
+
 
         res.send("success")
 
@@ -164,13 +175,8 @@ async function buyItem(req, res) {
     }
 }
 
-/**
- * @description Get the details about a character
- * @param {Object} req 
- * @param {Object} res 
- */
-async function signup(req, res) {
-    try {
+async function login(req, res){
+    try{
         const username = req.body.username
         const password = req.body.password
 
@@ -181,26 +187,80 @@ async function signup(req, res) {
         }
 
         // Check if username is already taken
-        // const characters = await character.getCharacterWithUsername(username)
+        const characters = await characterModel.getCharacterWithUsername(username)
 
-        if (characters.length > 0) {
-            res.status(400).send('Username already taken')
+        if (characters.length == 0) {
+            res.status(400).send('Username not found')
             return
         }
 
-        // Create a new character
-        const newCharacter = new characterModel({
-            username,
-            password
-        })
+        const found = characters.at(0)
 
-        newCharacter.save()
-        .then(() => res.json('Character added!'))
+        const match = await bcrypt.compare(password, found.password)
+
+        const payload = {
+            userId: found.userId,
+            username: found.username
+        }
+
+
+        if (match) {
+            const token = jwt.sign(payload, process.env.KEY, {expiresIn: '3h'})
+            res.json({
+                username,
+                userId: found.userId,
+                token
+            })
+        } else {
+            res.status(400).send('Incorrect password')
+        }
+    } catch (e) {
+        console.error(e)
+        res.status(500).send('Error logging in')
+    }
+}
+
+/**
+ * @description Get the details about a character
+ * @param {Object} req 
+ * @param {Object} res 
+ */
+async function signup(req, res) {
+    try {
+        const salt = await bcrypt.genSalt(10)
+        const hashedPassword = await bcrypt.hash(req.body.password, salt)
+        const username = req.body.username
+        const password = hashedPassword
+
+        // Require a username and password
+        if (!username || !password) {
+            res.status(400).send('Username and password are required fields')
+            return
+        }
+
+        // Check if username is already taken
+        // const characters = await character.getCharacterWithUsername(username)
+
+        // if (characters.length > 0) {
+        //     res.status(400).send('Username already taken')
+        //     return
+        // }
+
+        // Create a new character
+        const newCharacter = {
+            username: username,
+            password: password
+            //TODO add weapons, items, armor
+
+        }
+        const character = await characterModel.createCharacter(newCharacter)
+        // characterController.newCharacter(character)
+
+        character.save()
+        .then(() => res.json('Character added!').send('success'))
         .catch(err => res.status(400).json('Error: ' + err))
 
-        // await character.createCharacter(newCharacter)
 
-        res.send('success')
     } catch (e) {
         console.error(e)
         res.status(500).send('Error creating character')
@@ -322,4 +382,5 @@ module.exports = {
     getCharacter,
     getCharacterStatus,
     signup,
+    login
 }
