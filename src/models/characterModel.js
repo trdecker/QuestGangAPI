@@ -9,7 +9,8 @@ const tempClassID = Math.floor(Math.random() * 3) + 1
 const now = Date.now()
 const rand = Math.floor(Math.random() * 10000)
 const userId = now.toString() + rand.toString()
-
+const itemSchema = require('./itemModel').itemSchema
+const itemModel = require("../models/itemModel");
 const characterSchema = new mongoose.Schema({
     username: String,
     password: String, // TODO: HASH THIS
@@ -36,14 +37,7 @@ const characterSchema = new mongoose.Schema({
         sellPrice: {type: Number, default: 1},
         description: {type: String, default: "A bucket from the KFC in the town of Ye Olde."}
     }],
-    items: [{
-        id: {type: Number, default: 002},
-        name: {type: String, default: "Healing Potion"},
-        type: {type: String, default: "potion"},
-        healAmount: {type: Number, default: 50},
-        sellPrice: {type: Number, default: 20},
-        description: {type: String, default: "A potion that heals 50 HP."}
-    }],
+    items: [itemSchema],
     weapons: [{
         id: {type: Number, default: 999},
         name: {type: String, default: "Used Shovel"},
@@ -51,7 +45,6 @@ const characterSchema = new mongoose.Schema({
         damage: {type: Number, default: 4},
         sellPrice: {type: Number, default: 1},
         description: {type: String, default: "A used shovel. It's not very effective."}
-    }]
 })
 
 const characterModel = mongoose.model('character', characterSchema, 'characters')
@@ -70,13 +63,15 @@ function createCharacter(character) {
  * @param {String} userId 
  * @returns {Object} The character found
  */
+
 async function getCharacter(userId) {
     try {
-        const character = await characterModel.find({ userId: userId }).exec()
-        return character
+        const character = await characterModel.findOne({ userId: userId }).exec();
+        return character;
+        
     } catch (e) {
-        console.error('Error while getting character')
-        throw (e)
+        console.error('Error while getting character');
+        throw (e);
     }
 }
 
@@ -135,6 +130,38 @@ async function updateCharacterStats(user) {
     }
 }
 
+async function addItemToInventory(req, res) {
+    try {
+        const { characterId, itemId } = req.body;
+  
+        // Fetch item details from the item database/model.
+        const item = await itemModel.getItem(itemId);
+        if (!item) {
+            console.log("Item not found");
+            return res.status(404).send("Item not found");
+        }
+  
+        // Use findOneAndUpdate on the character model
+        const updatedCharacter = await characterModel.findOneAndUpdate(
+          { userId: characterId },
+          { $push: { items: item } },
+          { new: true }
+      );
+  
+        if (!updatedCharacter) {
+            console.log("Character not found");
+            return res.status(404).send("Character not found");
+        }
+  
+        console.log('Item added successfully', updatedCharacter);
+        res.json(updatedCharacter); // Sending the updated character as a response
+    } catch (e) {
+        console.error(e);
+        res.status(500).send("Error adding item to inventory");
+    }
+  }
+
+  
 module.exports = {
     createCharacter,
     getCharacter,
@@ -142,5 +169,6 @@ module.exports = {
     getCharacterWithUsername,
     updateStatus,
     updateCharacterStats,
-    characterModel
+    characterModel,
+    addItemToInventory,
 }

@@ -80,7 +80,8 @@ function newCharacter(req, res) {
             mana: 20,
             weapons,
             items,
-            armor
+            armor,
+            gold: 10
         }
 
         req.body.createCharacter(newCharacter)
@@ -173,7 +174,6 @@ async function buyItem(req, res) {
         res.status(500).send('Error buying item')
     }
 }
-
 
 async function login(req, res){
     try{
@@ -300,7 +300,8 @@ async function getCharacter(req, res) {
             hp: found.hp,
             armor: found.armor,
             items: found.items,
-            weapons: found.weapons
+            weapons: found.weapons,
+            gold: found.gold
         }
 
         res.json(json)
