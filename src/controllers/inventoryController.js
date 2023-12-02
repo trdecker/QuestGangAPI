@@ -8,7 +8,7 @@ async function addItemToInventory(req, res) {
 }
   
   
-
+//started work on remove items
 async function removeItemfromInventory(req, res) {
   //assume character is verified
   try {
