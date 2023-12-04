@@ -11,6 +11,7 @@ const rand = Math.floor(Math.random() * 10000);
 const userId = now.toString() + rand.toString();
 const itemSchema = require("./itemModel").itemSchema;
 const itemModel = require("../models/itemModel");
+
 const characterSchema = new mongoose.Schema({
   username: String,
   password: String, // TODO: HASH THIS
@@ -41,21 +42,27 @@ const characterSchema = new mongoose.Schema({
         default: "A bucket from the KFC in the town of Ye Olde.",
       },
     },
-  ],
-  items: [itemSchema],
-  weapons: [
-    {
-      id: { type: Number, default: 999 },
-      name: { type: String, default: "Used Shovel" },
-      type: { type: String, default: "weapon" },
-      damage: { type: Number, default: 4 },
-      sellPrice: { type: Number, default: 1 },
-      description: {
-        type: String,
-        default: "A used shovel. It's not very effective.",
-      },
-    },
-  ],
+    condition: {type: String, default: ""},
+    level: {type: Number, default: 1},
+    mana: {type: Number, default: 20},
+    hp: {type: Number, default: 30},
+    armor: [{
+        id: {type: Number, default: 998},
+        name: {type: String, default: "Ye Olde KFC Bucket"},
+        type: {type: String, default: "armor"},
+        defense: {type: Number, default: 2},
+        sellPrice: {type: Number, default: 1},
+        description: {type: String, default: "A bucket from the KFC in the town of Ye Olde."}
+    }],
+    items: [itemSchema],
+    weapons: [{
+        id: {type: Number, default: 999},
+        name: {type: String, default: "Used Shovel"},
+        type: {type: String, default: "weapon"},
+        damage: {type: Number, default: 4},
+        sellPrice: {type: Number, default: 1},
+        description: {type: String, default: "A used shovel. It's not very effective."}
+    }]
 });
 
 const characterModel = mongoose.model(
@@ -146,44 +153,68 @@ async function updateCharacterStats(user) {
   }
 }
 
-async function addItemToInventory(req, res) {
-  try {
-    const { characterId, itemId } = req.body;
+async function addItemToInventory(itemId, characterId) {
+    try {
+        // Fetch item details from the item database/model.
+        const item = await itemModel.getItem(itemId);
+        if (!item) {
+            throw new Error("Item not found");
+        }
 
-    // Fetch item details from the item database/model.
-    const item = await itemModel.getItem(itemId);
-    if (!item) {
-      console.log("Item not found");
-      return res.status(404).send("Item not found");
+        // Use findOneAndUpdate on the character model
+        const updatedCharacter = await characterModel.findOneAndUpdate(
+            { userId: characterId },
+            { $push: { items: item } },
+            { new: true }
+        );
+
+        if (!updatedCharacter) {
+            throw new Error("Character not found");
+        }
+
+        console.log('Item added successfully', updatedCharacter);
+        return updatedCharacter; // Returning the updated character
+    } catch (e) {
+        console.error(e);
+        throw new Error("Error adding item to inventory");
     }
+}
 
-    // Use findOneAndUpdate on the character model
-    const updatedCharacter = await characterModel.findOneAndUpdate(
-      { userId: characterId },
-      { $push: { items: item } },
-      { new: true }
-    );
+async function removeItemFromInventory(itemId, characterId) {
+    try {
+        // Check if the item exists in the item database/model.
+        const item = await itemModel.getItem(itemId);
+        if (!item) {
+            throw new Error("Item not found");
+        }
 
-    if (!updatedCharacter) {
-      console.log("Character not found");
-      return res.status(404).send("Character not found");
+        // Use findOneAndUpdate to remove the item from the character's inventory
+        const updatedCharacter = await characterModel.findOneAndUpdate(
+            { userId: characterId },
+            { $pull: { items: { _id: itemId } } },
+            { new: true }
+        );
+
+        if (!updatedCharacter) {
+            throw new Error("Character not found");
+        }
+
+        console.log('Item removed successfully', updatedCharacter);
+        return updatedCharacter; // Returning the updated character
+    } catch (e) {
+        console.error(e);
+        throw new Error("Error removing item from inventory");
     }
-
-    console.log("Item added successfully", updatedCharacter);
-    res.json(updatedCharacter); // Sending the updated character as a response
-  } catch (e) {
-    console.error(e);
-    res.status(500).send("Error adding item to inventory");
-  }
 }
 
 module.exports = {
-  createCharacter,
-  getCharacter,
-  updateStatus,
-  getCharacterWithUsername,
-  updateStatus,
-  updateCharacterStats,
-  characterModel,
-  addItemToInventory,
-};
+    createCharacter,
+    getCharacter,
+    updateStatus,
+    getCharacterWithUsername,
+    updateStatus,
+    updateCharacterStats,
+    characterModel,
+    addItemToInventory,
+    removeItemFromInventory,
+}
