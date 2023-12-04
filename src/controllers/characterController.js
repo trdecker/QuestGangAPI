@@ -352,6 +352,7 @@ async function getCharacterStatus(req, res) {
                 level: found.level,
                 mana: found.mana,
                 hp: found.hp,
+                gold: found.gold,
                 monstersInCombat: []
             })
         }
@@ -364,7 +365,8 @@ async function getCharacterStatus(req, res) {
                 condition: found.condition,
                 level: found.level,
                 mana: found.mana,
-                hp: found.hp
+                hp: found.hp,
+                gold: found.gold
             })
         }
         
