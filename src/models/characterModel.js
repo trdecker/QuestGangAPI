@@ -4,41 +4,47 @@
  */
 
 const mongoose = require('mongoose')
-
+const quest = require('./questModel')
+const tempClassID = Math.floor(Math.random() * 3) + 1
+const now = Date.now()
+const rand = Math.floor(Math.random() * 10000)
+const userId = now.toString() + rand.toString()
+const itemSchema = require('./itemModel').itemSchema
+const itemModel = require("../models/itemModel");
 const characterSchema = new mongoose.Schema({
     username: String,
     password: String, // TODO: HASH THIS
-    name: String,
-    userId: String,
-    classId: Number,
+    name: {type: String, default: "testUser"},
+    userId: {type: String, default: userId},
+    classId:{type: Number, default: tempClassID},
+    gold: {type: Number, default: 10},
     status: {
-        userStatus: String,
-        choices: [String], // Include ONLY for when status is IN_QUEST
-        actions: [String], // Include ONLY for when status is IN_COMBAT
-        questId: String,
-        locationId: String
+        userStatus: {type: String, default: "NOT_IN_QUEST"},
+        choices: {type: [String], default: []}, // Include ONLY for when status is IN_QUEST
+        actions: {type: [String], default: []}, // Include ONLY for when status is IN_COMBAT
+        questId: {type: String, default: ""},
+        locationId: {type: String, default: ""}
     },
-    condition: String,
-    level: Number,
-    mana: Number,
-    hp: Number,
+    condition: {type: String, default: ""},
+    level: {type: Number, default: 1},
+    mana: {type: Number, default: 20},
+    hp: {type: Number, default: 30},
     armor: [{
-        name: String,
-        armorId: Number,
-        defense: Number
+        id: {type: Number, default: 998},
+        name: {type: String, default: "Ye Olde KFC Bucket"},
+        type: {type: String, default: "armor"},
+        defense: {type: Number, default: 2},
+        sellPrice: {type: Number, default: 1},
+        description: {type: String, default: "A bucket from the KFC in the town of Ye Olde."}
     }],
-    items: [{
-        name: String,
-        type: String,
-        mod: Number
-    }],
+    items: [itemSchema],
     weapons: [{
-        name: String,
-        weaponId: Number,
-        damageMod: Number,
-        condEffect: String,
-        type: String
-    }]
+        id: {type: Number, default: 999},
+        name: {type: String, default: "Used Shovel"},
+        type: {type: String, default: "weapon"},
+        damage: {type: Number, default: 4},
+        sellPrice: {type: Number, default: 1},
+        description: {type: String, default: "A used shovel. It's not very effective."}
 })
 
 const characterModel = mongoose.model('character', characterSchema, 'characters')
@@ -57,13 +63,15 @@ function createCharacter(character) {
  * @param {String} userId 
  * @returns {Object} The character found
  */
+
 async function getCharacter(userId) {
     try {
-        const character = await characterModel.find({ userId: userId }).exec()
-        return character
+        const character = await characterModel.findOne({ userId: userId }).exec();
+        return character;
+        
     } catch (e) {
-        console.error('Error while getting character')
-        throw (e)
+        console.error('Error while getting character');
+        throw (e);
     }
 }
 
@@ -122,6 +130,38 @@ async function updateCharacterStats(user) {
     }
 }
 
+async function addItemToInventory(req, res) {
+    try {
+        const { characterId, itemId } = req.body;
+  
+        // Fetch item details from the item database/model.
+        const item = await itemModel.getItem(itemId);
+        if (!item) {
+            console.log("Item not found");
+            return res.status(404).send("Item not found");
+        }
+  
+        // Use findOneAndUpdate on the character model
+        const updatedCharacter = await characterModel.findOneAndUpdate(
+          { userId: characterId },
+          { $push: { items: item } },
+          { new: true }
+      );
+  
+        if (!updatedCharacter) {
+            console.log("Character not found");
+            return res.status(404).send("Character not found");
+        }
+  
+        console.log('Item added successfully', updatedCharacter);
+        res.json(updatedCharacter); // Sending the updated character as a response
+    } catch (e) {
+        console.error(e);
+        res.status(500).send("Error adding item to inventory");
+    }
+  }
+
+  
 module.exports = {
     createCharacter,
     getCharacter,
@@ -129,5 +169,6 @@ module.exports = {
     getCharacterWithUsername,
     updateStatus,
     updateCharacterStats,
-    characterModel
+    characterModel,
+    addItemToInventory,
 }
