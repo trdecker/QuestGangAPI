@@ -11,6 +11,7 @@ const rand = Math.floor(Math.random() * 10000)
 const userId = now.toString() + rand.toString()
 const itemSchema = require('./itemModel').itemSchema
 const itemModel = require("../models/itemModel");
+
 const characterSchema = new mongoose.Schema({
     username: String,
     password: String, // TODO: HASH THIS
@@ -45,6 +46,7 @@ const characterSchema = new mongoose.Schema({
         damage: {type: Number, default: 4},
         sellPrice: {type: Number, default: 1},
         description: {type: String, default: "A used shovel. It's not very effective."}
+    }]
 })
 
 const characterModel = mongoose.model('character', characterSchema, 'characters')
@@ -130,36 +132,61 @@ async function updateCharacterStats(user) {
     }
 }
 
-async function addItemToInventory(req, res) {
+async function addItemToInventory(itemId, characterId) {
     try {
-        const { characterId, itemId } = req.body;
-  
         // Fetch item details from the item database/model.
         const item = await itemModel.getItem(itemId);
         if (!item) {
-            console.log("Item not found");
-            return res.status(404).send("Item not found");
+            throw new Error("Item not found");
         }
-  
+
         // Use findOneAndUpdate on the character model
         const updatedCharacter = await characterModel.findOneAndUpdate(
-          { userId: characterId },
-          { $push: { items: item } },
-          { new: true }
-      );
-  
+            { userId: characterId },
+            { $push: { items: item } },
+            { new: true }
+        );
+
         if (!updatedCharacter) {
-            console.log("Character not found");
-            return res.status(404).send("Character not found");
+            throw new Error("Character not found");
         }
-  
+
         console.log('Item added successfully', updatedCharacter);
-        res.json(updatedCharacter); // Sending the updated character as a response
+        return updatedCharacter; // Returning the updated character
     } catch (e) {
         console.error(e);
-        res.status(500).send("Error adding item to inventory");
+        throw new Error("Error adding item to inventory");
     }
-  }
+}
+
+async function removeItemFromInventory(itemId, characterId) {
+    try {
+        // Check if the item exists in the item database/model.
+        const item = await itemModel.getItem(itemId);
+        if (!item) {
+            throw new Error("Item not found");
+        }
+
+        // Use findOneAndUpdate to remove the item from the character's inventory
+        const updatedCharacter = await characterModel.findOneAndUpdate(
+            { userId: characterId },
+            { $pull: { items: { _id: itemId } } },
+            { new: true }
+        );
+
+        if (!updatedCharacter) {
+            throw new Error("Character not found");
+        }
+
+        console.log('Item removed successfully', updatedCharacter);
+        return updatedCharacter; // Returning the updated character
+    } catch (e) {
+        console.error(e);
+        throw new Error("Error removing item from inventory");
+    }
+}
+
+
 
   
 module.exports = {
@@ -171,4 +198,5 @@ module.exports = {
     updateCharacterStats,
     characterModel,
     addItemToInventory,
+    removeItemFromInventory,
 }
