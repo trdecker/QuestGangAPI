@@ -29,39 +29,36 @@ async function getStore(req, res) {
 // 'sellItem' used to handle item selling requests.
 async function sellItem(req, res) {
     try {
-        // Extracting 'itemId' from the request's query parameters.
-        const sellingItem = req.query.itemId
+        const sellingItem = req.query.itemId;
+        const character = req.body.character;
 
-        // Extracting 'username' from the request's body.
-        const username = req.body.username
-
-        // Extracting 'character' object from the request's body.
-        const character = req.body.character
-
-        // Check if 'character' or 'character.items' is not defined or invalid.
         if (!character || !character.items) {
-            // Sending a 400 Bad Request response indicating invalid character or items.
             res.status(400).send('Invalid character or character items');
             return;
-        }
-        // Check if the item to be sold is not found in the character's inventory.
-        else if (character.items.find((item) => item.itemId == sellingItem) == undefined) {
-            // Sending a 400 Bad Request response indicating the item is not in the inventory.
-            res.status(400).send('Item not in inventory')
-            return
-        }
-        else {
-            const sellPrice = json.items.find((item) => item.id == sellingItem).sellPriceInGold
-            
+        } else if (character.items.find((item) => item.itemId == sellingItem) === undefined) {
+            res.status(400).send('Item not in inventory');
+            return;
+        } else {
+            const itemToSell = character.items.find((item) => item.itemId == sellingItem);
+            const sellPrice = itemToSell.sellPriceInGold;
+
+            // Remove the item from inventory
+            await removeItemFromInventory(sellingItem, character.userId);
+
+            // Update character's gold/currency
+            character.gold += sellPrice;
+
+            // Save/update character data (assuming you have a method to do this)
+            await characterModel.updateCharacter(character.userId, { gold: character.gold });
+
+            res.json({ message: 'Item sold successfully', updatedCharacter: character });
         }
     } catch (e) {
-        // Catching and logging any errors that occur during the process.
-        console.error(e)
-
-        // Sending a 500 Internal Server Error response in case of an exception.
-        res.status(500).send('Error selling item')
+        console.error(e);
+        res.status(500).send('Error selling item');
     }
 }
+
 
 
 async function buyItem(req, res) {
