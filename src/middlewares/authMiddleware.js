@@ -1,7 +1,6 @@
-/*const jwt = require("jsonwebtoken")
-const config = require("../config/config.js")
+const jwt = require ("jsonwebtoken")
 
-export function requireAuth (req, res, next) {
+function requireAuth (req, res, next) {
     const token = req.headers.authorization
 
     // 401 if no authtoken
@@ -10,7 +9,7 @@ export function requireAuth (req, res, next) {
     }
   
     try {
-      const decoded = jwt.verify(token.replace('Bearer ', ''), config.key)  
+      const decoded = jwt.verify(token.replace('Bearer ', ''), '') // TODO: get config.key
       req.user = {
         userId: decoded.userId,
         username: decoded.username
@@ -21,4 +20,9 @@ export function requireAuth (req, res, next) {
       // Invalid token, respond with an error
       res.status(401).json({ error: 'Unauthorized' })
     }
-  }*/
+  }
+
+module.exports =
+  {
+    requireAuth
+  }

@@ -18,13 +18,20 @@ const characterSchema = new mongoose.Schema({
   name: { type: String, default: "testUser" },
   userId: { type: String, default: userId },
   classId: { type: Number, default: tempClassID },
+  attack: { type: Number, default: 1 },
+  defense: { type: Number, default: 1 },
   gold: { type: Number, default: 10 },
   status: {
-    userStatus: { type: String, default: "NOT_IN_QUEST" },
-    choices: { type: [String], default: [] }, // Include ONLY for when status is IN_QUEST
-    actions: { type: [String], default: [] }, // Include ONLY for when status is IN_COMBAT
-    questId: { type: String, default: "" },
-    locationId: { type: String, default: "" },
+      userStatus: String,
+      // Include ONLY for when status is IN_QUEST
+      choices: [{ 
+          name: String,
+          locationId: String
+       }],
+      // Include ONLY for when status is IN_COMBAT
+      actions: [String],
+      questId: String,
+      locationId: String
   },
     condition: {type: String, default: ""},
     level: {type: Number, default: 1},
@@ -36,7 +43,8 @@ const characterSchema = new mongoose.Schema({
         type: {type: String, default: "armor"},
         defense: {type: Number, default: 2},
         sellPrice: {type: Number, default: 1},
-        description: {type: String, default: "A bucket from the KFC in the town of Ye Olde."}
+        description: {type: String, default: "A bucket from the KFC in the town of Ye Olde."},
+        equipped: Boolean
     }],
     items: [itemSchema],
     weapons: [{
@@ -45,7 +53,8 @@ const characterSchema = new mongoose.Schema({
         type: {type: String, default: "weapon"},
         damage: {type: Number, default: 4},
         sellPrice: {type: Number, default: 1},
-        description: {type: String, default: "A used shovel. It's not very effective."}
+        description: {type: String, default: "A used shovel. It's not very effective."},
+        equipped: Boolean
     }]
 });
 
@@ -71,13 +80,15 @@ function createCharacter(character) {
  */
 
 async function getCharacter(userId) {
-  try {
-    const character = await characterModel.findOne({ userId: userId }).exec();
-    return character;
-  } catch (e) {
-    console.error("Error while getting character");
-    throw e;
-  }
+    try {
+        const characters = await characterModel.find({ userId: userId }).exec()
+        if (characters.length === 0)
+            return null
+        return characters.at(0)
+    } catch (e) {
+        console.error('Error while getting character')
+        throw (e)
+    }
 }
 
 /**
@@ -191,6 +202,95 @@ async function removeItemFromInventory(itemId, characterId) {
     }
 }
 
+/**
+ * Update the amoung of gold a user has.
+ * @param {String} userId 
+ * @param {Number} gold 
+ */
+async function updateCharacterGold(userId, gold) {
+    try {
+        await characterModel.findOneAndUpdate(
+            { userId: userId },
+            { $set: { 
+                gold: gold
+             } }, 
+            { new: true }
+        )
+    } catch (e) {
+        console.error(e);
+        throw new Error("Error removing item from inventory");
+    }
+}
+
+async function levelUpCharacter(user) {
+    try {
+        user.level = user.level + 1
+        user.attack = user.attack + user.level
+        user.defense = user.defense + user.level
+        user.hp = (10 * user.level) + 20
+
+        await characterModel.findOneAndUpdate(
+            { userId: user.userId },
+            { $set: { 
+                level: user.level,
+                attack: user.attack,
+                defense: user.defense,
+                hp: user.hp 
+             } }, 
+            { new: true }
+        )
+
+        return user
+    } catch (e) {
+        console.error(e);
+        throw new Error("Error removing item from inventory");
+    }
+}
+
+/**
+ * Update the amoung of gold a user has.
+ * @param {String} userId 
+ * @param {Number} gold 
+ */
+async function updateCharacterGold(userId, gold) {
+    try {
+        await characterModel.findOneAndUpdate(
+            { userId: userId },
+            { $set: { 
+                gold: gold
+             } }, 
+            { new: true }
+        )
+    } catch (e) {
+        console.error(e)
+        throw new Error("Error removing item from inventory")
+    }
+}
+
+async function levelUpCharacter(user) {
+    try {
+        user.level = user.level + 1
+        user.attack = user.attack + user.level
+        user.defense = user.defense + user.level
+        user.hp = (10 * user.level) + 20
+
+        await characterModel.findOneAndUpdate(
+            { userId: user.userId },
+            { $set: { 
+                level: user.level,
+                attack: user.attack,
+                defense: user.defense,
+                hp: user.hp 
+             } }, 
+            { new: true }
+        )
+        return user
+    } catch (e) {
+        console.error(e)
+        throw new Error("Error removing item from inventory")
+    }
+}
+
 module.exports = {
     createCharacter,
     getCharacter,
@@ -198,6 +298,8 @@ module.exports = {
     getCharacterWithUsername,
     updateStatus,
     updateCharacterStats,
+    updateCharacterGold,
+    levelUpCharacter,
     characterModel,
     addItemToInventory,
     removeItemFromInventory,

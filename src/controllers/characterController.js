@@ -175,6 +175,7 @@ async function buyItem(req, res) {
     }
 }
 
+
 async function login(req, res){
     try{
         const username = req.body.username
@@ -266,6 +267,12 @@ async function signup(req, res) {
         res.status(500).send('Error creating character')
     }
 }
+
+/**
+ * Get the character. User will pass username as a query
+ * @param {Object} req 
+ * @param {Object} res 
+ */
 async function getCharacter(req, res) {
     try {
         const username = req.query.username
@@ -324,7 +331,7 @@ async function getCharacterStatus(req, res) {
 
         // Require a user ID
         if (!username) {
-            res.status(400).send('User ID is a required field')
+            res.status(400).send('Username is a required field')
             return
         }
 
@@ -337,12 +344,27 @@ async function getCharacterStatus(req, res) {
         }
 
         // Return the character WITHOUT the hashed password
-        const found = characters.at(0)
+        const user = characters.at(0)
 
-        // TODO: If in combat, display the monsters you are fighting
         // TODO: Retrieve class associated with classId and return the class information
-        if (found.status.userStatus === userStatus.IN_COMBAT) {
-            // const quest = questModel.get
+        const result = {
+            status: user.status,
+            name: user.name,
+            userId: user.userId,
+            classId: user.classId,
+            condition: user.condition,
+            level: user.level,
+            mana: user.mana,
+            hp: user.hp,
+            attack: user.attack,
+            defense: user.defense,
+            gold: user.gold
+        }
+        if (user.status.userStatus === userStatus.IN_COMBAT) {
+            const quest = await questModel.getQuest(user.status.questId)
+            console.log(quest)
+            const location = quest.locations.find((location) => location.locationId === user.status.locationId)
+            console.log('location:', location)
             res.json({
                 status: found.status,
                 name: found.name,
