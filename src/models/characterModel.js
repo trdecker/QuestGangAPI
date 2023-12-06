@@ -167,7 +167,7 @@ async function addItemToInventory(itemId, characterId) {
             throw new Error("Character not found");
         }
 
-        console.log('Item added successfully', updatedCharacter);
+        console.log('Item added successfully');
         return updatedCharacter; // Returning the updated character
     } catch (e) {
         console.error(e);
