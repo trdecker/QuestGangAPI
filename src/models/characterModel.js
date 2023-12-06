@@ -98,8 +98,8 @@ async function getCharacter(userId) {
  */
 async function getCharacterWithUsername(username) {
   try {
-    const character = await characterModel.find({ username: username }).exec();
-    return character;
+    const character = await characterModel.findOne({ username: username }).exec()
+    return character
   } catch (e) {
     console.error("Error while getting character");
     throw e;

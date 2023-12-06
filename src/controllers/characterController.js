@@ -3,15 +3,8 @@ const bcrypt = require('bcrypt')
 const { conditions, userStatus } = require('../types')
 const json = require('../../assets/items.json')
 const itemModel = require('../models/itemModel')
-const characterController = require('../controllers/characterController');
-const jwt = require('jsonwebtoken');
-
-
-const { config } = require('dotenv');
-
-
-
-
+const characterController = require('../controllers/characterController')
+const jwt = require('jsonwebtoken')
 
 /**
  * // 
@@ -94,11 +87,15 @@ function newCharacter(req, res) {
         res.status(500).send('Internal error')
     }
 }
- 
+
+/**
+ * @description Get a character's inventory
+ * @param {Object} req 
+ * @param {Object} res 
+ */
 async function getCharacterInventory(req, res) {
     try {
         const username = req.query.username
-        console.log(username)
  
         // Require a user ID
         if (!username) {
@@ -106,23 +103,19 @@ async function getCharacterInventory(req, res) {
             return
         }
  
-        const characters = await character.getCharacterWithUsername(username)
+        const character = await characterModel.getCharacterWithUsername(username)
  
         // Return 404 if no user found
-        if (characters.length === 0) {
+        if (!character) {
             res.status(404).send('No character found with that username')
             return
         }
- 
-        const found = characters.at(0)
 
-        const inventory = { 
-            weapons: found.weapons,
-            items: found.items,
-            armor: found.armor
-        }
- 
-        res.json(inventory)
+        res.json({
+            weapons: character.weapons,
+            items: character.items,
+            armor: character.armor
+        })
     } catch (e) {
         console.error(e)
         res.status(500).send('Error getting character')
@@ -174,7 +167,6 @@ async function buyItem(req, res) {
         res.status(500).send('Error buying item')
     }
 }
-
 
 async function login(req, res){
     try{
@@ -398,11 +390,22 @@ async function getCharacterStatus(req, res) {
     }
 }
 
+async function equipItem(req, res) {
+    try {
+        // const itemId
+
+    } catch (e) {
+        console.error(e)
+        throw('Error equipping item')
+    }
+}
+
 module.exports = {
     newCharacter,
     getCharacterInventory,
     getStore,
     buyItem,
+    equipItem,
     getCharacter,
     getCharacterStatus,
     signup,
