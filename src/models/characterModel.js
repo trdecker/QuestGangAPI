@@ -16,8 +16,13 @@ const characterSchema = new mongoose.Schema({
     gold: Number,
     status: {
         userStatus: String,
-        choices: [String], // Include ONLY for when status is IN_QUEST
-        actions: [String], // Include ONLY for when status is IN_COMBAT
+        // Include ONLY for when status is IN_QUEST
+        choices: [{ 
+            name: String,
+            locationId: String
+         }],
+        // Include ONLY for when status is IN_COMBAT
+        actions: [String],
         questId: String,
         locationId: String
     },
@@ -129,6 +134,51 @@ async function updateCharacterStats(user) {
     }
 }
 
+/**
+ * Update the amoung of gold a user has.
+ * @param {String} userId 
+ * @param {Number} gold 
+ */
+async function updateCharacterGold(userId, gold) {
+    try {
+        await characterModel.findOneAndUpdate(
+            { userId: userId },
+            { $set: { 
+                gold: gold
+             } }, 
+            { new: true }
+        )
+    } catch (e) {
+        console.error('Error updating gold')
+        throw (e)
+    }
+}
+
+async function levelUpCharacter(user) {
+    try {
+        user.level = user.level + 1
+        user.attack = user.attack + user.level
+        user.defense = user.defense + user.level
+        user.hp = (10 * user.level) + 20
+
+        await characterModel.findOneAndUpdate(
+            { userId: user.userId },
+            { $set: { 
+                level: user.level,
+                attack: user.attack,
+                defense: user.defense,
+                hp: user.hp 
+             } }, 
+            { new: true }
+        )
+
+        return user
+    } catch (e) {
+        console.error('Error updating level')
+        throw (e)
+    }
+}
+
 module.exports = {
     createCharacter,
     getCharacter,
@@ -136,5 +186,7 @@ module.exports = {
     getCharacterWithUsername,
     updateStatus,
     updateCharacterStats,
+    updateCharacterGold,
+    levelUpCharacter,
     characterModel
 }

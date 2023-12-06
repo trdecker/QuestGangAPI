@@ -20,16 +20,6 @@ function generateId() {
     return `${now}${rand}`
 }
 
-  /**
-   * SUPER basic function to get reward amount. TODO: Improve
-   * @deprecated
-   * @param {Number} userLevel 
-   * @returns {Number} reward GP
-   */
-function rewardGp(userLevel) {
-    return userLevel * 10
-}
-
 /**
  * @description sends a list of quests to the user. Saves those quests in
  * "quests" with status NOT_ACTIVE. If the user DOES NOT have the status "NOT_IN_QUEST",
@@ -40,7 +30,6 @@ function rewardGp(userLevel) {
 async function requestQuests(req, res) {
     try {
         const userId = req.query.userId ?? null
-        const userLevel = req.query.userLevel ?? '1'
         const numQuests = req.query.numQuests ?? 3
 
         // Must send user ID
@@ -58,11 +47,15 @@ async function requestQuests(req, res) {
             return
         }
 
+        const userLevel = user.level
+
+        // Check if user is dead
         if (user.status.userStatus === userStatus.DEAD) {
             res.status(403).send('User is DEAD. Create a new character to start over!')
             return
         }
 
+        // User MUST NOT be in a quest or combat!
         if (user.status.userStatus !== userStatus.NOT_IN_QUEST) {
             res.status(403).send('User is already in quest! Cannot start a new quest until current is finished.')
             return
@@ -75,8 +68,18 @@ async function requestQuests(req, res) {
         const numLocations = locations.length
         const LOCATIONS_IN_QUEST = 4
 
-        // A 'for' loop to create a list of i number of quests
-        const quests = []        
+        // TODO: Finish this. This will make quests more random and interesting
+        // const quests2 = []
+        // const numLayers = Math.floor(Math.random() * 5) + 1
+        // for (let i = 0; i < numQuests; i++) {
+        //     console.log('In generate Quest. Quest number: ', i)
+        //     quests2.push(await generateQuest(locations, numLayers))
+        // }
+
+        // console.log(quests2)
+
+        const quests = []
+
         for (let i = 0; i < numQuests; i++) {
             // For now, have only 4 locations.
             const location1 = locations.at(Math.floor(Math.random() * numLocations))
@@ -134,25 +137,38 @@ async function requestQuests(req, res) {
                 locations: [
                     {
                         name: location1.name,
-                        locationId: "1",
+                        locationId: '1',
                         monsters: [],
-                        neighbors: ["2", "3"]
+                        neighbors: [{
+                            name: location2.name,
+                            locationId: '2'
+                        }, 
+                        {
+                            name: location3.name,
+                            locationId: '3'
+                        }]
                     },
                     {
                         name: location2.name,
-                        locationId: "2",
+                        locationId: '2',
                         monsters: [monsters.at(1)],
-                        neighbors: ["4"]
+                        neighbors: [{
+                            name: location4.name,
+                            locationId: '4'
+                        }]
                     },
                     {
                         name: location3.name,
-                        locationId: "3",
+                        locationId: '3',
                         monsters: [monsters.at(2)],
-                        neighbors: ["4"]
+                        neighbors: [{
+                            name: location4.name,
+                            locationId: '4'
+                        }]
                     },
                     {
                         name: location4.name,
-                        locationId: "4",
+                        locationId: '4',
                         monsters: [bossMonster],
                         neighbors: []
                     }
@@ -176,6 +192,77 @@ async function requestQuests(req, res) {
             description: e
         })
     }
+}
+
+function generateQuest(possibleLocations, numLayers) {
+    const locations = recGenerateLayer(possibleLocations, numLayers)
+
+    return locations
+}
+
+async function recGenerateLayer(possibleLocations, numLayers) {
+    console.log(`In recGenerateLayer. Layer number: ${numLayers}`)
+
+    // The number of locations possible in each layer are either 1 for the end (when numLayers is 1) or 1-5.
+    let numLocations
+    if (numLayers === 1)
+        numLocations = 1
+    else 
+        numLocations = Math.floor(Math.random() * 5) + 1
+
+    // Create the location(s)
+    const layerLocations = []
+
+    for (let i = 0; i < numLocations; i++) {
+        const randLoc = possibleLocations.at(Math.floor(Math.random() * possibleLocations.length))
+        const loc = {
+            name: randLoc.name,
+            locationId: generateId(),
+            monsters: [],
+            neighbors: []
+        }
+        layerLocations.push(loc)
+    }
+
+    // If it's the LAST layer, return before creating children
+    if (numLayers === 1)
+        return layerLocations
+
+    // Get the next layer of locations
+    const children = await recGenerateLayer(possibleLocations, numLayers-1)
+    console.log('Generating children. Layer number: ', numLayers)
+    console.log(layerLocations)
+
+    // For each layerLocation, assign a random number of the children as their neighbors
+    layerLocations.forEach((location) => {
+        console.log(location.name)
+        // Possible amounts are 1 - the amount of children
+        const numChildren = Math.floor(Math.random() * children.length) + 1
+
+        // Assign the chhildren to the location.
+        for (let i = 0; i < numChildren; i++) {
+            // FIXME: Start here in debugging!!!!!!!!
+            // Make sure we at least add ONE child TODO: This could be a problem child :)
+            const maxAttempts = 10
+            let attempts = 0
+            let childAdded = false
+            do {
+                childAdded = false
+                const randIndex = Math.floor(Math.random() * children.length)
+                const child = children.at(randIndex)
+
+                // Check the child isn't already added. If they aren't, add them!
+                if (!location.neighbors.some((loc) => loc.locationId === child.locationId)) {
+                    location.neighbors.push(child.locationId)
+                    childAdded = true
+                }
+                else attempts++
+    
+            } while (!childAdded || attempts < maxAttempts)
+        }
+    })
+
+    return layerLocations
 }
 
 /**
@@ -237,15 +324,15 @@ async function acceptQuest(req, res) {
 
         // Change the chosen quest status to ACTIVE
         quest.status = questStatus.ACTIVE
-        questModel.updateStatus(questId, quest.status)
+        await questModel.updateStatus(questId, quest.status)
 
         // Delete all the quests that weren't chosen
-        questModel.deleteCharacterQuests(userId, questStatus.NOT_ACTIVE)
+        await questModel.deleteCharacterQuests(userId, questStatus.NOT_ACTIVE)
 
         // If the first quest has a monster, put the player into combat!
         if (quest.locations[0].monsters.length > 0) {
             quest.status.userStatus = userStatus.IN_COMBAT
-            characterModel.updateStatus(userId, user.status)
+            await characterModel.updateStatus(userId, user.status)
 
             res.json({
                 monsters: quest.locations[0].monsters[0],
@@ -260,7 +347,7 @@ async function acceptQuest(req, res) {
                 questId,
                 locationId: quest.locations[0].locationId
             }
-            characterModel.updateStatus(userId, status)
+            await characterModel.updateStatus(userId, status)
 
             res.json(status)
         }
@@ -273,14 +360,13 @@ async function acceptQuest(req, res) {
 }
 
 /**
- * @description Leave a quest the user is in
+ * @description Leave a quest the user is in. For now, users can only be in ONE quest at a time, so no need to check for questId.
  * @param {Object} req 
  * @param {Object} res 
  */
 async function leaveQuest(req, res) {
     try {
         const userId = req.query.userId
-        const questId = req.query.questId
 
         // If no userId, send error
         if (!userId) {
@@ -309,9 +395,9 @@ async function leaveQuest(req, res) {
             return
         }
 
-        const newStatus = {
-            userStatus: "NOT_IN_QUEST"
-        }
+        const newStatus = { userStatus: "NOT_IN_QUEST" }
+
+        const questId = user.status.questId
 
         // Update the user to NOT_IN_QUEST
         await characterModel.updateStatus(userId, newStatus)
@@ -358,17 +444,11 @@ async function makeChoice(req, res) {
             return
         }
 
-        console.log(user)
-
         const questId = user.status.questId
         const choices = user.status.choices
 
-        console.log(questId)
-
         // Check if quest exists by finding it
         const quest = await questModel.getQuest(questId)
-
-        console.log(quest)
 
         if (!quest) {
             res.status(404).send('Quest not found')
@@ -400,7 +480,7 @@ async function makeChoice(req, res) {
         }
 
         // Check if choice is valid
-        if (!choices.includes(choice)) {
+        if (!choices.some((validChoice) => validChoice.locationId === choice)) {
             res.status(403).json({
                 message: 'That is not a valid choice!',
                 validChoices: choices
@@ -441,13 +521,8 @@ async function doAction(req, res) {
         const userId = req.body.userId
         const action = req.body.action
 
-        if (!userId) {
-            res.status(400).send('User ID required')
-            return
-        }
-
-        if (!action) {
-            res.status(400).send('Action required')
+        if (!userId || !action) {
+            res.status(400).send('User ID and action are required')
             return
         }
 
@@ -460,16 +535,18 @@ async function doAction(req, res) {
             return
         }
 
-        const questId = user.status.questId
+        const status = user.status
+        const questId = status.questId
 
-        // The user MUST be IN_COMBAT!
-        if (user.status.userStatus === userStatus.IN_QUEST || user.status.userStatus === userStatus.NOT_IN_QUEST) {
-            res.status(403).send('Character is not in combat!')
+        // Check if user is dead
+        if (status.userStatus === userStatus.DEAD) {
+            res.status(403).send('Character is dead. Make a new character to play again.')
             return
         }
 
-        if (user.status.userStatus === userStatus.DEAD) {
-            res.status(403).send('Character is dead. Make a new character to play again.')
+        // The user MUST be IN_COMBAT!
+        if (status.userStatus !== userStatus.IN_COMBAT) {
+            res.status(403).send('Character is not in combat!')
             return
         }
 
@@ -483,19 +560,20 @@ async function doAction(req, res) {
         }
 
         // Get location in quest
-        const location = quest.locations.find((loc) => loc.locationId === user.status.locationId)
+        const location = quest.locations.find((loc) => loc.locationId === status.locationId)
         // Get the monster. For now assume there is only ONE monster per location! TODO: Get monster with monsterId value in body
         const monster = location.monsters.at(0)
 
-        // Check that action is valid
-        const actions = user.status.actions
-
-        if (!actions.includes(action)) {
-            res.status(403).json({
+        // ##### USER TURN #####
+        const validActions = status.actions
+    
+        // Check if action is valid
+        if (!validActions.includes(action)) {
+            res.status(400).json({
                 message: 'That is not a valid action!',
-                validActions: actions,
+                validActions: validActions,
                 character: {
-                    status: user.status,
+                    status: status,
                     name: user.name,
                     userId: user.userId,
                     classId: user.classId,
@@ -503,172 +581,37 @@ async function doAction(req, res) {
                     level: user.level,
                     mana: user.mana,
                     hp: user.hp
-                }
+                },
+                monsters: location.monsters
             })
             return
         }
-
-        console.log(user.weapons)
-
-        // TODO: Separate this out into "user's turn" and "monster's turn" for simplity's sake.
         
-        // Get the user's equipped weapon FIXME: user.weapons is returning as undefined!
+        // Get the user's equipped weapon and armor FIXME: user.weapons is returning as undefined!
         const weapon = user.weapons ? user.weapons.find((weapon) => weapon.equipped === true) : null
-        console.log('equipped weapon:', weapon)
-        // Get the user's armor
         const armor = user.armor.find((armor) => armor.equipped === true)
-        console.log('armor: ', armor)
+
+        let userAttack = null
 
         // If a user tries to ATTACK
         if (action === userActions.ATTACK) {
-            console.log('in attack')
             // Reduce monster's health by the user's attack and the damageMod of the weapon they're useing
-            let monsterDamage = user.attack
-            if (weapon)
-                monsterDamage += weapon.damageMod // FIXME: Change the name of this value to "attack"
-            monster.hp -= monsterDamage
+            userAttack = weapon ? user.attack += weapon.damageMod : user.attack
+            // Damage monster. Raise to zero if negative
+            monster.hp -= userAttack
             // Raise to zero if negative
-            if (monster.hp < 0)
-                monster.hp = 0
+            monster.hp < 0 ? monster.hp = 0 : null
 
             await questModel.editMonsterInLocation(questId, location.locationId, monster.id, monster)     
-            console.log('monster editted!')
-
-            // Check if monster is dead
-            if (monster.hp === 0) {
-                newStatus = {
-                    userStatus: userStatus.IN_QUEST,
-                    choices: location.neighbors,
-                    actions: [],
-                    questId,
-                    locationId: location.locationId
-                }
-
-                await characterModel.updateStatus(userId, newStatus)
-                console.log('monster is dead and user has left combat')
-                console.log(monster)
-
-                // If the monster was a BOSS, the quest is completed!
-                if (monster.boss) {
-                    console.log('Killed boss!')
-
-                    // TODO: Give reward for finishing quest
-
-                    // Mark quest as complete and user as not in quest
-                    await questModel.updateStatus(questId, questStatus.COMPLETE)
-                    newStatus = {
-                        userStatus: userStatus.NOT_IN_QUEST
-                    }
-                    await characterModel.updateStatus(userId, newStatus)
-                    res.json({
-                        message: `${monster.monsterName} slain!`,
-                        character: {
-                            status: newStatus,
-                            name: user.name,
-                            userId: user.userId,
-                            classId: user.classId,
-                            condition: user.condition,
-                            level: user.level,
-                            mana: user.mana,
-                            hp: user.hp
-                        }
-                    })
-
-                    return
-                }
-
-                // TODO: Give reward for killing a monster
-
-                // For now this assumes there is ONE and ONLY ONE monster.
-                res.json({
-                    message: `${monster.monsterName} slain!`,
-                    character: {
-                        status: newStatus,
-                        name: user.name,
-                        userId: user.userId,
-                        classId: user.classId,
-                        condition: user.condition,
-                        level: user.level,
-                        mana: user.mana,
-                        hp: user.hp
-                    }
-                })
-
-                return
-            }
-
-            // Monster fights back, reducing user's health TODO: Create function to do this (attackUser)
-            let monsterAttack = monster.attack - user.defense
-            if (armor)
-                monsterAttack -= armor.defense
-            // If monster attack is negative, raise to 1 (no attack does no damage)
-            if (monsterAttack <= 0)
-                monsterAttack = 1
-            user.hp -= monsterAttack
-
-            if (user.hp < 0) {
-                user.hp = 0
-            }
-
-            await characterModel.updateCharacterStats(user)
-            console.log('user has taken damage')
-
-            // Check if user is dead. If they are, set userStatus to DEAD
-            if (user.hp === 0) {
-                user.status = {
-                    userStatus: userStatus.DEAD,
-                    choices: [],
-                    actions: [],
-                    questId: questId,
-                    locationId: locationId
-                }
-                await characterModel.updateStatus(userId, user.status)
-                await questModel.updateStatus(questId, questStatus.FAILED)
-                console.log('user has died')
-
-                res.json({
-                    message: `You attacked the ${monster.monsterName}, inflicting ${monsterDamage} damage. The ${monster.monsterName} attacked back, doing ${monsterAttack} damage, and you died. GAME OVER`,
-                    locationOfDeath: location.name,
-                    killer: monster.monsterName,
-                    character: {
-                        status: user.status,
-                        name: user.name,
-                        userId: user.userId,
-                        classId: user.classId,
-                        condition: user.condition,
-                        level: user.level,
-                        mana: user.mana,
-                        hp: user.hp
-                    }
-                })
-            }
-            // Else just update the user of the conditions of the fight.
-            else {
-                res.json({
-                    message: `You attacked the ${monster.monsterName}, inflicting ${monsterDamage} damage. The ${monster.monsterName} attacked back, doing ${monsterAttack} damage.`,
-                    status: user.status,
-                    monsters: location.monsters,
-                    character: {
-                        status: user.status,
-                        name: user.name,
-                        userId: user.userId,
-                        classId: user.classId,
-                        condition: user.condition,
-                        level: user.level,
-                        mana: user.mana,
-                        hp: user.hp
-                    }
-                })
-            }
         }
 
         // #### If a user tries to RUN ####
-        else if (action === userActions.RUN) {
+        if (action === userActions.RUN) {
             // Random number 1-3; 1 is success
             const randomNumber = Math.floor(Math.random() * 3) + 1
             // If success, set userStatus to IN_QUEST
             if (randomNumber === 1) {
-                const newStatus = {
+                let newStatus = {
                     choices: location.neighbors,
                     locationId: location.locationId,
                     questId: quest.questId,
@@ -678,9 +621,7 @@ async function doAction(req, res) {
 
                 // If the monster was a BOSS, the quest is finished, but marked as terminated (You can't win anymore)
                 if (monster.boss) {
-                    newStatus = {
-                        userStatus: userStatus.NOT_IN_QUEST
-                    }
+                    newStatus = { userStatus: userStatus.NOT_IN_QUEST }
                     await questModel.updateStatus(questId, questStatus.TERMINATED)
                 }
 
@@ -699,65 +640,109 @@ async function doAction(req, res) {
                         hp: user.hp
                     }
                 })
-            }
-            // If failure, user is damaged
-            else {
-                // Monster fights back, reduce user's health by 4
-                let monsterAttack = monster.attack
-                if (armor)
-                    monsterAttack -= armor.defense
-                user.hp -= monsterAttack
-                // Raise to zero if negative
-                user.hp < 0 ? user.hp = 0 : null
-                await characterModel.updateCharacterStats(user)
-
-                // Check if user is dead
-                if (user.hp === 0) {         
-                    user.status = {
-                        userStatus: userStatus.DEAD,
-                        choices: [],
-                        actions: [],
-                        questId: questId,
-                        locationId: locationId
-                    }
-                    await characterModel.updateStatus(userId, user.status)
-                    await questModel.updateStatus(questId, questStatus.FAILED)
-                    console.log('user has died')
-                    
-                    res.json({
-                        message: `You failed to run away, and the ${monster.monsterName} inflicted ${monsterAttack} damage, and you died. GAME OVER`,
-                        locationOfDeath: location.name,
-                        killer: monster.monsterName,
-                        character: {
-                            status: user.status,
-                            name: user.name,
-                            userId: user.userId,
-                            classId: user.classId,
-                            condition: user.condition,
-                            level: user.level,
-                            mana: user.mana,
-                            hp: user.hp
-                        }
-                    })
-                }
-                else {
-                    res.json({
-                        message: `You failed to run away, and the ${monster.monsterName} inflicted ${monsterAttack} damage.`,
-                        status: user.status,
-                        character: {
-                            status: user.status,
-                            name: user.name,
-                            userId: user.userId,
-                            classId: user.classId,
-                            condition: user.condition,
-                            level: user.level,
-                            mana: user.mana,
-                            hp: user.hp
-                        }
-                    })
-                }
+                return
             }
         }
+
+        // Any other actions that we might include will go here.
+
+        // Before monster's turn, check to see if monster is dead
+        if (monster.hp === 0) {
+            let newStatus = {
+                userStatus: userStatus.IN_QUEST,
+                choices: location.neighbors,
+                questId,
+                locationId: location.locationId
+            }
+
+            let rewardGp = 10 * monster.level
+
+            // If the monster was a BOSS, the quest is completed!
+            if (monster.boss) {
+                // Give reward for finishing quest
+                rewardGp += quest.rewardGp
+
+                // Mark quest as complete and user as not in quest
+                await questModel.updateStatus(questId, questStatus.COMPLETE)
+
+                newStatus = { userStatus: userStatus.NOT_IN_QUEST }
+                // Level up character
+                const updatedUser = await characterModel.levelUpCharacter(user)
+                        
+                user.level = updatedUser.level
+                user.attack = updatedUser.attack
+                user.defense = updatedUser.defense
+                user.hp = updatedUser.hp
+
+                await characterModel.updateStatus(userId, { userStatus: userStatus.COMPLETE })
+            }
+            console.log('rewardGp: ', rewardGp)
+
+            await characterModel.updateCharacterGold(userId, user.gold + rewardGp)
+            await characterModel.updateStatus(userId, newStatus)
+
+            // For now this assumes there is ONE and ONLY ONE monster.
+            res.json({
+                message: `${monster.monsterName} slain!` + (monster.boss ? ' Quest complete!' : `` + ` Earned ${rewardGp} gold.`),
+                character: {
+                    status: newStatus,
+                    name: user.name,
+                    userId: user.userId,
+                    classId: user.classId,
+                    condition: user.condition,
+                    level: user.level,
+                    mana: user.mana,
+                    hp: user.hp
+                }
+            })
+            return
+        }
+
+        // ##### MONSTER'S TURN #####
+        // This will run ONLY if the function did not return earlier.
+        // If monster attack is negative, raise to 1 (no attack does no damage)
+        let monsterAttack = armor ? monster.attack - user.defense - armor.defense : monster.attack - user.defense
+        monsterAttack <= 0 ? monsterAttack = 1 : null
+
+        // Damage the user. If it falls beneath 0, raise to 0.
+        user.hp -= monsterAttack
+        user.hp < 0 ? user.hp = 0 : null
+        await characterModel.updateCharacterStats(user)
+        
+        // Generate the message to return
+        let message = ''
+        if (action === userActions.ATTACK)
+            message = `You attacked the ${monster.monsterName}, inflicting ${userAttack} damage.` +
+            `The ${monster.monsterName} attacked back, doing ${monsterAttack} damage.`
+        if (action === userActions.RUN)
+            message = `You attempt to run away, and failed. The ${monster.monsterName} attacked, inflicting ${monsterAttack} damage.`
+
+        // Check if user is dead. If they are, set userStatus to DEAD
+        if (user.hp === 0) {
+            status = { userStatus: userStatus.DEAD }
+            await characterModel.updateStatus(userId, status)
+            await questModel.updateStatus(questId, questStatus.FAILED)
+
+            message = inputString.slice(0, -1)
+            message += ', killing you. GAME OVER'
+        }
+
+        res.json({
+            message,
+            status: status,
+            monsters: location.monsters,
+            character: {
+                status: status,
+                name: user.name,
+                userId: user.userId,
+                classId: user.classId,
+                condition: user.condition,
+                level: user.level,
+                mana: user.mana,
+                hp: user.hp
+            }
+        })
+
     } catch (e) {
         console.error(e)
         res.status(500).send('Error doing action')

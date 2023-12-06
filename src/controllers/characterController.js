@@ -271,7 +271,7 @@ async function getCharacterStatus(req, res) {
 
         // Require a user ID
         if (!username) {
-            res.status(400).send('User ID is a required field')
+            res.status(400).send('Username is a required field')
             return
         }
 
@@ -297,7 +297,8 @@ async function getCharacterStatus(req, res) {
             mana: user.mana,
             hp: user.hp,
             attack: user.attack,
-            defense: user.defense
+            defense: user.defense,
+            gold: user.gold
         }
         if (user.status.userStatus === userStatus.IN_COMBAT) {
             const quest = await questModel.getQuest(user.status.questId)

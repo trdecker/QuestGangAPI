@@ -30,7 +30,10 @@ const questSchema = new mongoose.Schema({
             boss: Boolean,
             condition: String
         }],
-        neighbors: [{ type: String }]
+        neighbors: [{ 
+            name: String,
+            locationId: String
+         }]
     }]
 })
 
