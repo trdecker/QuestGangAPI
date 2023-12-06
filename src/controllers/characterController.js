@@ -3,15 +3,8 @@ const bcrypt = require('bcrypt')
 const { conditions, userStatus } = require('../types')
 const json = require('../../assets/items.json')
 const itemModel = require('../models/itemModel')
-const characterController = require('../controllers/characterController');
-const jwt = require('jsonwebtoken');
-
-
-const { config } = require('dotenv');
-
-
-
-
+const questModel = require('../models/questModel')
+const jwt = require('jsonwebtoken')
 
 /**
  * // 
@@ -106,7 +99,7 @@ async function getCharacterInventory(req, res) {
             return
         }
  
-        const characters = await character.getCharacterWithUsername(username)
+        const characters = await characterModel.getCharacterWithUsername(username)
  
         // Return 404 if no user found
         if (characters.length === 0) {
@@ -327,7 +320,6 @@ async function getCharacter(req, res) {
 async function getCharacterStatus(req, res) {
     try {
         const username = req.query.username
-        console.log(username)
 
         // Require a user ID
         if (!username) {
@@ -335,7 +327,7 @@ async function getCharacterStatus(req, res) {
             return
         }
 
-        const characters = await character.getCharacterWithUsername(username)
+        const characters = await characterModel.getCharacterWithUsername(username)
 
         // Return 404 if no user found
         if (characters.length === 0) {
@@ -362,34 +354,14 @@ async function getCharacterStatus(req, res) {
         }
         if (user.status.userStatus === userStatus.IN_COMBAT) {
             const quest = await questModel.getQuest(user.status.questId)
-            console.log(quest)
             const location = quest.locations.find((location) => location.locationId === user.status.locationId)
-            console.log('location:', location)
             res.json({
-                status: found.status,
-                name: found.name,
-                userId: found.userId,
-                classId: found.classId,
-                condition: found.condition,
-                level: found.level,
-                mana: found.mana,
-                hp: found.hp,
-                gold: found.gold,
-                monstersInCombat: []
+                ...result,
+                monstersInCombat: [location.monsters]
             })
         }
         else {
-            res.json({
-                status: found.status,
-                name: found.name,
-                userId: found.userId,
-                classId: found.classId,
-                condition: found.condition,
-                level: found.level,
-                mana: found.mana,
-                hp: found.hp,
-                gold: found.gold
-            })
+            res.json(result)
         }
         
     } catch (e) {
