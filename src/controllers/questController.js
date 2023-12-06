@@ -754,5 +754,6 @@ module.exports = {
     acceptQuest,
     leaveQuest,
     makeChoice,
-    doAction
+    doAction,
+    generateId
 }

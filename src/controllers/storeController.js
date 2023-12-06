@@ -26,28 +26,40 @@ async function getStore(req, res) {
     }
 }
 
+// 'sellItem' used to handle item selling requests.
 async function sellItem(req, res) {
     try {
-        const sellingItem = req.query.itemId
-        const username = req.body.username
-        const character = req.body.character
-        if (character.items.find((item) => item.itemId == sellingItem) == undefined) {
-            res.status(400).send('Item not in inventory')
-            return
+        const sellingItem = req.query.itemId;
+        const character = req.body.character;
+
+        if (!character || !character.items) {
+            res.status(400).send('Invalid character or character items');
+            return;
+        } else if (character.items.find((item) => item.itemId == sellingItem) === undefined) {
+            res.status(400).send('Item not in inventory');
+            return;
+        } else {
+            const itemToSell = character.items.find((item) => item.itemId == sellingItem);
+            const sellPrice = itemToSell.sellPriceInGold;
+
+            // Remove the item from inventory
+            await removeItemFromInventory(sellingItem, character.userId);
+
+            // Update character's gold/currency
+            character.gold += sellPrice;
+
+            // Save/update character data (assuming you have a method to do this)
+            await characterModel.updateCharacter(character.userId, { gold: character.gold });
+
+            res.json({ message: 'Item sold successfully', updatedCharacter: character });
         }
-        else {
-            const sellPrice = json.items.find((item) => item.id == sellingItem).price
-        }
-
-
-        
-        
-
     } catch (e) {
-        console.error(e)
-        res.status(500).send('Error selling item')
+        console.error(e);
+        res.status(500).send('Error selling item');
     }
 }
+
+
 
 async function buyItem(req, res) {
     try {
@@ -81,4 +93,5 @@ async function buyItem(req, res) {
 module.exports = {
     getStore,
     buyItem,
+    sellItem,
 }

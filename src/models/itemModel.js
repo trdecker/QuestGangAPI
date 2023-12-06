@@ -6,9 +6,11 @@
  const mongoose = require('mongoose')
  
  const itemSchema = new mongoose.Schema({
+    _id: mongoose.Schema.Types.ObjectId,
     id: String,
     name: String,
     type: String,
+    damage: String,
     sellPriceInGold: Number,
     description: String
  })
@@ -31,6 +33,6 @@
 
  
  module.exports = {
-    getItem
+    getItem, itemSchema
  }
  
