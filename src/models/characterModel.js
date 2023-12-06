@@ -26,22 +26,6 @@ const characterSchema = new mongoose.Schema({
     questId: { type: String, default: "" },
     locationId: { type: String, default: "" },
   },
-  condition: { type: String, default: "" },
-  level: { type: Number, default: 1 },
-  mana: { type: Number, default: 20 },
-  hp: { type: Number, default: 30 },
-  armor: [
-    {
-      id: { type: Number, default: 998 },
-      name: { type: String, default: "Ye Olde KFC Bucket" },
-      type: { type: String, default: "armor" },
-      defense: { type: Number, default: 2 },
-      sellPrice: { type: Number, default: 1 },
-      description: {
-        type: String,
-        default: "A bucket from the KFC in the town of Ye Olde.",
-      },
-    },
     condition: {type: String, default: ""},
     level: {type: Number, default: 1},
     mana: {type: Number, default: 20},

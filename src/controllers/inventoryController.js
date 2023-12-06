@@ -44,6 +44,5 @@ async function saveCharacterInventory(characterId, newInventory) {
 
 module.exports = {
   addItemToInventory,
-  removeItemfromInventory,
   getItem,
 };
