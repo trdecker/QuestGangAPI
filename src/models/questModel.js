@@ -30,7 +30,10 @@ const questSchema = new mongoose.Schema({
             boss: Boolean,
             condition: String
         }],
-        neighbors: [{ type: String }]
+        neighbors: [{ 
+            name: String,
+            locationId: String
+         }]
     }]
 })
 
@@ -71,8 +74,10 @@ async function deleteCharacterQuests(userId, questStatus) {
  */
 async function getQuest(questId) {
     try {
-        const quest = await questModel.find({ questId: questId })
-        return quest
+        const quests = await questModel.find({ questId: questId })
+        if (quests.length === 0)
+            return null
+        else return quests[0]
     } catch (e) {
         console.error('Error in accepting quest')
         throw (e)

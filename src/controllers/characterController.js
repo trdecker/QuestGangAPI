@@ -3,15 +3,8 @@ const bcrypt = require('bcrypt')
 const { conditions, userStatus } = require('../types')
 const json = require('../../assets/items.json')
 const itemModel = require('../models/itemModel')
-const characterController = require('../controllers/characterController');
-const jwt = require('jsonwebtoken');
-
-
-const { config } = require('dotenv');
-
-
-
-
+const characterController = require('../controllers/characterController')
+const jwt = require('jsonwebtoken')
 
 /**
  * // 
@@ -80,7 +73,8 @@ function newCharacter(req, res) {
             mana: 20,
             weapons,
             items,
-            armor
+            armor,
+            gold: 10
         }
 
         req.body.createCharacter(newCharacter)
@@ -93,11 +87,15 @@ function newCharacter(req, res) {
         res.status(500).send('Internal error')
     }
 }
- 
+
+/**
+ * @description Get a character's inventory
+ * @param {Object} req 
+ * @param {Object} res 
+ */
 async function getCharacterInventory(req, res) {
     try {
         const username = req.query.username
-        console.log(username)
  
         // Require a user ID
         if (!username) {
@@ -105,23 +103,19 @@ async function getCharacterInventory(req, res) {
             return
         }
  
-        const characters = await character.getCharacterWithUsername(username)
+        const character = await characterModel.getCharacterWithUsername(username)
  
         // Return 404 if no user found
-        if (characters.length === 0) {
+        if (!character) {
             res.status(404).send('No character found with that username')
             return
         }
- 
-        const found = characters.at(0)
 
-        const inventory = { 
-            weapons: found.weapons,
-            items: found.items,
-            armor: found.armor
-        }
- 
-        res.json(inventory)
+        res.json({
+            weapons: character.weapons,
+            items: character.items,
+            armor: character.armor
+        })
     } catch (e) {
         console.error(e)
         res.status(500).send('Error getting character')
@@ -173,7 +167,6 @@ async function buyItem(req, res) {
         res.status(500).send('Error buying item')
     }
 }
-
 
 async function login(req, res){
     try{
@@ -272,6 +265,12 @@ async function signup(req, res) {
         res.status(500).send('Error creating character')
     }
 }
+
+/**
+ * Get the character. User will pass username as a query
+ * @param {Object} req 
+ * @param {Object} res 
+ */
 async function getCharacter(req, res) {
     try {
         const username = req.query.username
@@ -306,7 +305,8 @@ async function getCharacter(req, res) {
             hp: found.hp,
             armor: found.armor,
             items: found.items,
-            weapons: found.weapons
+            weapons: found.weapons,
+            gold: found.gold
         }
 
         res.json(json)
@@ -329,7 +329,7 @@ async function getCharacterStatus(req, res) {
 
         // Require a user ID
         if (!username) {
-            res.status(400).send('User ID is a required field')
+            res.status(400).send('Username is a required field')
             return
         }
 
@@ -342,12 +342,27 @@ async function getCharacterStatus(req, res) {
         }
 
         // Return the character WITHOUT the hashed password
-        const found = characters.at(0)
+        const user = characters.at(0)
 
-        // TODO: If in combat, display the monsters you are fighting
         // TODO: Retrieve class associated with classId and return the class information
-        if (found.status.userStatus === userStatus.IN_COMBAT) {
-            // const quest = questModel.get
+        const result = {
+            status: user.status,
+            name: user.name,
+            userId: user.userId,
+            classId: user.classId,
+            condition: user.condition,
+            level: user.level,
+            mana: user.mana,
+            hp: user.hp,
+            attack: user.attack,
+            defense: user.defense,
+            gold: user.gold
+        }
+        if (user.status.userStatus === userStatus.IN_COMBAT) {
+            const quest = await questModel.getQuest(user.status.questId)
+            console.log(quest)
+            const location = quest.locations.find((location) => location.locationId === user.status.locationId)
+            console.log('location:', location)
             res.json({
                 status: found.status,
                 name: found.name,
@@ -357,6 +372,7 @@ async function getCharacterStatus(req, res) {
                 level: found.level,
                 mana: found.mana,
                 hp: found.hp,
+                gold: found.gold,
                 monstersInCombat: []
             })
         }
@@ -369,7 +385,8 @@ async function getCharacterStatus(req, res) {
                 condition: found.condition,
                 level: found.level,
                 mana: found.mana,
-                hp: found.hp
+                hp: found.hp,
+                gold: found.gold
             })
         }
         
@@ -379,11 +396,22 @@ async function getCharacterStatus(req, res) {
     }
 }
 
+async function equipItem(req, res) {
+    try {
+        // const itemId
+
+    } catch (e) {
+        console.error(e)
+        throw('Error equipping item')
+    }
+}
+
 module.exports = {
     newCharacter,
     getCharacterInventory,
     getStore,
     buyItem,
+    equipItem,
     getCharacter,
     getCharacterStatus,
     signup,

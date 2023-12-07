@@ -13,7 +13,9 @@ const monsterController = require('../controllers/monsterController')
 const characterController = require('../controllers/characterController')
 const questController = require('../controllers/questController')
 const testUserController = require('../controllers/testUserController')
+const storeController = require('../controllers/storeController')
 //const authMiddleware = require('../middlewares/authMiddleware')
+const inventoryController = require('../controllers/inventoryController')
 
 router.get('/userClasses/random', userClassController.getRandomUserClass)
 router.get('/userClasses', userClassController.getUserClass)
@@ -24,10 +26,8 @@ router.get('/monster/random', monsterController.getRandomMonster)
 // router.get('/monster', monsterController.getMonster)
 
 // router.get('/character', characterController.getCharacter)
-router.get('/characters/inventory', characterController.getCharacterInventory)
-router.get('/store', characterController.getStore)
-
-
+router.get('/character/inventory', characterController.getCharacterInventory)
+router.get('/store', storeController.getStore)
 
 // ##### Quest routes #####
 
@@ -39,11 +39,13 @@ router.put('/quests/accept', questController.acceptQuest)
 router.put('/quests/leave', questController.leaveQuest)
 
 // router.post('/character', characterController.createCharacter)
-router.put('/store', characterController.buyItem)
+router.put('/store/buy', storeController.buyItem)
+router.put('/store/sell', storeController.sellItem)
 
 router.put('/quest/action', questController.doAction) // For use in combat
 router.put('/quest/choice', questController.makeChoice) // For use while in quest
 
+router.put('/character/equippedItem', characterController.equipItem)
 router.post('/character', characterController.newCharacter)
 router.post('/character/signup', characterController.signup)
 router.post('/character/login', characterController.login)
