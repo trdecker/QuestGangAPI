@@ -1,7 +1,7 @@
-const character = require('../models/characterModel')
 const { conditions, userStatus } = require('../types')
 const json = require('../../assets/items.json')
 const itemModel = require('../models/itemModel')
+const characterSetup = require('../models/characterModel')
 
 /**
  * @deprecated Replace with sign in call
@@ -29,33 +29,34 @@ async function getStore(req, res) {
 // 'sellItem' used to handle item selling requests.
 async function sellItem(req, res) {
     try {
-        const sellingItem = req.query.itemId;
-        const character = req.body.character;
-
-        if (!character || !character.items) {
-            res.status(400).send('Invalid character or character items');
-            return;
-        } else if (character.items.find((item) => item.itemId == sellingItem) === undefined) {
-            res.status(400).send('Item not in inventory');
-            return;
-        } else {
-            const itemToSell = character.items.find((item) => item.itemId == sellingItem);
-            const sellPrice = itemToSell.sellPriceInGold;
-
-            // Remove the item from inventory
-            await removeItemFromInventory(sellingItem, character.userId);
-
-            // Update character's gold/currency
-            character.gold += sellPrice;
-
-            // Save/update character data (assuming you have a method to do this)
-            await characterModel.updateCharacter(character.userId, { gold: character.gold });
-
-            res.json({ message: 'Item sold successfully', updatedCharacter: character });
+        const userID = req.body.userId
+        const itemId = req.body.itemId
+        const item2sell = await itemModel.getItem(itemId)
+        if (item2sell.length == 0) {
+            res.status(404).send('No item found with that id')
+            return
         }
+        const character = await characterSetup.getCharacter(userID)
+        if (character.items.length == 0) {
+            res.status(400).send('No items to sell')
+            return
+        }
+        const itemIndex = character.items.findIndex((item) => item.id == itemId)
+        if (itemIndex == -1) {
+            res.status(400).send('Item not found in inventory')
+            return
+        }
+        character.items.splice(itemIndex, 1)
+        character.gold += item2sell[0].sellPriceInGold
+        const updatedCharacter = await characterSetup.characterModel.findOneAndUpdate(
+            { userId: userID },
+            { $set: { gold: character.gold, items: character.items } },
+            { new: true }
+        );
+        res.send(updatedCharacter)
     } catch (e) {
-        console.error(e);
-        res.status(500).send('Error selling item');
+        console.error(e)
+        res.status(500).send('Error selling item')
     }
 }
 
@@ -63,27 +64,28 @@ async function sellItem(req, res) {
 
 async function buyItem(req, res) {
     try {
-        const username = req.body.username
+        const userID = req.body.userId
         const itemId = req.body.itemId
         const test = json.items.find((item) => item.id == itemId)
-        console.log(test)
-        const test2 = await itemModel.getItem(itemId)
-        if (test2.length == 0) {
+        const item2buy = await itemModel.getItem(itemId)
+        if (item2buy.length == 0) {
             res.status(404).send('No item found with that id')
             return
         }
-        console.log(test2)
-        // const price = item.price
-        // const character = await character.getCharacterWithUsername(username)
-        // const gold = character.gold
-        // if (gold < price) {
-        //     res.status(400).send('Not enough gold')
-        //     return
-        // }
-        // character.gold = gold - price
-        // character.items.push({itemId: itemId})
-        // character.save()
-        res.send("success")
+        const character = await characterSetup.getCharacter(userID)
+        if (character.gold < item2buy[0].sellPriceInGold) {
+            res.status(400).send('Not enough gold')
+            return
+        }
+        characterSetup.addItemToInventory(itemId, userID)
+        character.gold -= item2buy[0].sellPriceInGold
+        console.log(character.gold)
+        const updatedCharacter = await characterSetup.characterModel.findOneAndUpdate(
+            { userId: userID },
+            { $set: { gold: character.gold } },
+            { new: true }
+        );
+        res.send(updatedCharacter)
     } catch (e) {
         console.error(e)
         res.status(500).send('Error buying item')

@@ -223,6 +223,7 @@ async function signup(req, res) {
     try {
         const salt = await bcrypt.genSalt(10)
         const hashedPassword = await bcrypt.hash(req.body.password, salt)
+        const actualName = req.body.name
         const username = req.body.username
         const password = hashedPassword
 
@@ -242,6 +243,7 @@ async function signup(req, res) {
 
         // Create a new character
         const newCharacter = {
+            name: actualName,
             username: username,
             password: password
             //TODO add weapons, items, armor
@@ -251,7 +253,11 @@ async function signup(req, res) {
         // characterController.newCharacter(character)
 
         character.save()
-        .then(() => res.json('Character added!').send('success'))
+        .then(() => res.json({
+            name : character.name,
+            username : character.username,
+            password : character.password
+        }))
         .catch(err => res.status(400).json('Error: ' + err))
 
 
