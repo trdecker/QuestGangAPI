@@ -99,6 +99,7 @@ async function getCharacter(userId) {
 async function getCharacterWithUsername(username) {
   try {
     const character = await characterModel.findOne({ username: username }).exec()
+    // console.log("Found Character: ", character)
     return character
   } catch (e) {
     console.error("Error while getting character");

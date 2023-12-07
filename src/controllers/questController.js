@@ -445,10 +445,12 @@ async function makeChoice(req, res) {
         }
 
         const questId = user.status.questId
+        console.log("questCon line 448 userId: ", questId)
         const choices = user.status.choices
 
         // Check if quest exists by finding it
         const quest = await questModel.getQuest(questId)
+        console.log("questCon line 453 quest: ", quest)
 
         if (!quest) {
             res.status(404).send('Quest not found')

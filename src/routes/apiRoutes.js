@@ -45,7 +45,7 @@ router.put('/store/sell', storeController.sellItem)
 router.put('/quest/action', questController.doAction) // For use in combat
 router.put('/quest/choice', questController.makeChoice) // For use while in quest
 
-router.put('/character/equippedItem', characterController.equipItem)
+// router.put('/character/equippedItem', characterController.equipItem)
 router.post('/character', characterController.newCharacter)
 router.post('/character/signup', characterController.signup)
 router.post('/character/login', characterController.login)
