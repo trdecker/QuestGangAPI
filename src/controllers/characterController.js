@@ -3,8 +3,9 @@ const bcrypt = require('bcrypt')
 const { conditions, userStatus } = require('../types')
 const json = require('../../assets/items.json')
 const itemModel = require('../models/itemModel')
-const characterController = require('../controllers/characterController')
+const { itemType } = require('../types')
 const jwt = require('jsonwebtoken')
+const questModel = require('../models/questModel')
 
 /**
  * // 
@@ -319,7 +320,6 @@ async function getCharacter(req, res) {
 async function getCharacterStatus(req, res) {
     try {
         const username = req.query.username
-        console.log(username)
 
         // Require a user ID
         if (!username) {
@@ -327,16 +327,13 @@ async function getCharacterStatus(req, res) {
             return
         }
 
-        const characters = await character.getCharacterWithUsername(username)
+        const user = await characterModel.getCharacterWithUsername(username)
 
         // Return 404 if no user found
-        if (characters.length === 0) {
+        if (!user) {
             res.status(404).send('No character found with that username')
             return
         }
-
-        // Return the character WITHOUT the hashed password
-        const user = characters.at(0)
 
         // TODO: Retrieve class associated with classId and return the class information
         const result = {
@@ -354,34 +351,14 @@ async function getCharacterStatus(req, res) {
         }
         if (user.status.userStatus === userStatus.IN_COMBAT) {
             const quest = await questModel.getQuest(user.status.questId)
-            console.log(quest)
             const location = quest.locations.find((location) => location.locationId === user.status.locationId)
-            console.log('location:', location)
             res.json({
-                status: found.status,
-                name: found.name,
-                userId: found.userId,
-                classId: found.classId,
-                condition: found.condition,
-                level: found.level,
-                mana: found.mana,
-                hp: found.hp,
-                gold: found.gold,
+                ...result,
                 monstersInCombat: []
             })
         }
         else {
-            res.json({
-                status: found.status,
-                name: found.name,
-                userId: found.userId,
-                classId: found.classId,
-                condition: found.condition,
-                level: found.level,
-                mana: found.mana,
-                hp: found.hp,
-                gold: found.gold
-            })
+            res.json(result)
         }
         
     } catch (e) {
@@ -390,10 +367,93 @@ async function getCharacterStatus(req, res) {
     }
 }
 
+/**
+ * @description Equip an item for a user. Can either be a weapon or armor. The already equipped armor or weapon is unequipped
+ */
 async function equipItem(req, res) {
     try {
-        // const itemId
+        const itemId = req.body?.itemId
+        const username = req.body?.username
+        const type = req.body?.type
 
+        if (!itemId || !username || ! type) {
+            res.status(400).send('itemId, username, and type are all required fields')
+            return
+        }
+
+        const user = await characterModel.getCharacterWithUsername(username)
+
+        if (!user) {
+            res.status(404).send('User not found!')
+            return
+        }
+
+        if (user.status.userStatus === userStatus.IN_COMBAT) {
+            res.status(404).send('User is in combat! Cannot change gear.')
+            return
+        }
+
+        const items = user.items
+        const weapons = user.weapons
+        const armor = user.armor
+
+        // Equip a new weapon
+        if (type === itemType.WEAPON) {
+            // Get the item from the array
+            const weapon = weapons.find((item) => item.id === itemId)
+            if (!weapon) {
+                res.status(404).send('Weapon not found')
+                return
+            }
+            if (weapon.id === itemId) {
+                res.status(403).send('Weapon is already equipped')
+                return
+            }
+            // Unequip the equipped weapon
+            const equippedWeapon = weapons.find((item) => item.equipped)
+            if (equippedWeapon) {
+                await characterModel.equipItemInInventory(user.userId, equippedWeapon.id, itemType.WEAPON, false)
+            }
+            // equip the new weapon
+            await characterModel.equipItemInInventory(user.userId, weapon.id, itemType.WEAPON, true)
+            // Send response
+            res.json({
+                message: `${weapon.name} equipped`,
+                weapon: weapon
+            })
+        }
+        // Equip new armor
+        else if (type === itemType.ARMOR) {
+            // Get the armor from the array
+            const newArmor = armor.find((item) => item.id === itemId)
+            if (!newArmor) {
+                res.status(404).send('Armor not found')
+                return
+            }
+            if (newArmor.id === itemId) {
+                res.status(403).send('Armor is already equipped')
+                return
+            }
+            // Unequip the equipped armor
+            const equippedArmor = armor.find((item) => item.equipped)
+            if (equippedArmor) {
+                await characterModel.equipItemInInventory(user.userId, equippedArmor.id, itemType.ARMOR, false)
+            }
+            // equip the new armor
+            await characterModel.equipItemInInventory(user.userId, newArmor.id, itemType.ARMOR, true)
+            // Send response
+            res.json({
+                message: `${newArmor.name} equipped`,
+                armor: newArmor
+            })
+        }
+        // If type is not weapon or armor, the call is invallid.
+        else {
+            res.status(400).json({
+                message: "Invalid type!",
+                allowedTypes: itemType
+            })
+        }
     } catch (e) {
         console.error(e)
         throw('Error equipping item')

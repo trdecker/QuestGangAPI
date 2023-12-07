@@ -25,9 +25,16 @@ const questStatus = {
     TERMINATED: 'TERMINATED'
 }
 
+const itemType = {
+    ARMOR: 'armor',
+    WEAPON: 'weapon'
+    // Probably more
+}
+
 module.exports = {
     conditions,
     userActions,
     questStatus,
-    userStatus
+    userStatus,
+    itemType
 }

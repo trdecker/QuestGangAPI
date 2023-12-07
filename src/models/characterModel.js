@@ -3,18 +3,18 @@
  * @date 11/4/2023
  */
 
-const mongoose = require("mongoose");
-const quest = require("./questModel");
-const tempClassID = Math.floor(Math.random() * 3) + 1;
-const now = Date.now();
-const rand = Math.floor(Math.random() * 10000);
-const userId = now.toString() + rand.toString();
-const itemSchema = require("./itemModel").itemSchema;
-const itemModel = require("../models/itemModel");
+const mongoose = require("mongoose")
+const tempClassID = Math.floor(Math.random() * 3) + 1
+const now = Date.now()
+const rand = Math.floor(Math.random() * 10000)
+const userId = now.toString() + rand.toString()
+const itemSchema = require("./itemModel").itemSchema
+const itemModel = require("../models/itemModel")
+const { userStatus, itemType } = require('../types')
 
 const characterSchema = new mongoose.Schema({
   username: String,
-  password: String, // TODO: HASH THIS
+  password: String,
   name: { type: String, default: "testUser" },
   userId: { type: String, default: userId },
   classId: { type: Number, default: tempClassID },
@@ -22,7 +22,7 @@ const characterSchema = new mongoose.Schema({
   defense: { type: Number, default: 1 },
   gold: { type: Number, default: 10 },
   status: {
-      userStatus: String,
+      userStatus: { type: String, default: userStatus.NOT_IN_QUEST},
       // Include ONLY for when status is IN_QUEST
       choices: [{ 
           name: String,
@@ -38,31 +38,31 @@ const characterSchema = new mongoose.Schema({
     mana: {type: Number, default: 20},
     hp: {type: Number, default: 30},
     armor: [{
-        id: {type: Number, default: 998},
+        id: {type: String, default: "998"},
         name: {type: String, default: "Ye Olde KFC Bucket"},
-        type: {type: String, default: "armor"},
+        type: {type: String, default: itemType.ARMOR},
         defense: {type: Number, default: 2},
         sellPrice: {type: Number, default: 1},
         description: {type: String, default: "A bucket from the KFC in the town of Ye Olde."},
-        equipped: Boolean
+        equipped: {type: Boolean, default: true}
     }],
     items: [itemSchema],
     weapons: [{
-        id: {type: Number, default: 999},
+        id: {type: String, default: "999"},
         name: {type: String, default: "Used Shovel"},
-        type: {type: String, default: "weapon"},
+        type: {type: String, default: itemType.WEAPON},
         damage: {type: Number, default: 4},
         sellPrice: {type: Number, default: 1},
         description: {type: String, default: "A used shovel. It's not very effective."},
-        equipped: Boolean
+        equipped: {type: Boolean, default: true}
     }]
-});
+})
 
 const characterModel = mongoose.model(
   "character",
   characterSchema,
   "characters"
-);
+)
 
 /**
  * @param {Object} character
@@ -78,7 +78,6 @@ function createCharacter(character) {
  * @param {String} userId
  * @returns {Object} The character found
  */
-
 async function getCharacter(userId) {
     try {
         const characters = await characterModel.find({ userId: userId }).exec()
@@ -93,7 +92,7 @@ async function getCharacter(userId) {
 
 /**
  * @description Find a character -- but with a username!
- * @param {String} userId
+ * @param {String} username
  * @returns {Object} The character found
  */
 async function getCharacterWithUsername(username) {
@@ -101,8 +100,8 @@ async function getCharacterWithUsername(username) {
     const character = await characterModel.findOne({ username: username }).exec()
     return character
   } catch (e) {
-    console.error("Error while getting character");
-    throw e;
+    console.error("Error while getting character")
+    throw e
   }
 }
 
@@ -125,7 +124,7 @@ async function updateStatus(userId, characterStatus) {
 }
 
 /**
- * Update the stats of a character, which include their condition, level, mana, or hp. TODO: Separate levelling up in a different function?
+ * Update the stats of a character, which include their condition, level, mana, or hp.
  * @param {Object} user
  */
 async function updateCharacterStats(user) {
@@ -199,6 +198,42 @@ async function removeItemFromInventory(itemId, characterId) {
     } catch (e) {
         console.error(e);
         throw new Error("Error removing item from inventory");
+    }
+}
+
+/**
+ * @description Equip (or unequip) and item
+ * @param {String} userId
+ * @param {String} itemId
+ * @param {String} type
+ * @param {Boolean} equip 
+ */
+async function equipItemInInventory(userId, itemId, type, equip) {
+    try {
+        let updateField
+        if (type === itemType.WEAPON)
+            updateField = 'weapon.$[item].equipped'
+        else if (type === itemType.ARMOR)
+            updateField = 'armor.$[item].equipped'
+        else
+            return
+        await characterModel.findOneAndUpdate(
+            { userId: userId },
+            {
+                $set: {
+                    updateField: equip
+                }
+            },
+            { 
+                new: true,
+                arrayFilters: [{ 'item.id': itemId }]
+            }
+        )
+
+
+    } catch (e) {
+        console.error(e)
+        throw ('Error equipping item')
     }
 }
 
@@ -303,4 +338,5 @@ module.exports = {
     characterModel,
     addItemToInventory,
     removeItemFromInventory,
+    equipItemInInventory
 }

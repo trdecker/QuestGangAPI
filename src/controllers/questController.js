@@ -587,7 +587,7 @@ async function doAction(req, res) {
             return
         }
         
-        // Get the user's equipped weapon and armor FIXME: user.weapons is returning as undefined!
+        // Get the user's equipped weapon and armor
         const weapon = user.weapons ? user.weapons.find((weapon) => weapon.equipped === true) : null
         const armor = user.armor.find((armor) => armor.equipped === true)
 
@@ -596,7 +596,7 @@ async function doAction(req, res) {
         // If a user tries to ATTACK
         if (action === userActions.ATTACK) {
             // Reduce monster's health by the user's attack and the damageMod of the weapon they're useing
-            userAttack = weapon ? user.attack += weapon.damageMod : user.attack
+            userAttack = weapon ? (user.attack += weapon.damage) : user.attack
             // Damage monster. Raise to zero if negative
             monster.hp -= userAttack
             // Raise to zero if negative
