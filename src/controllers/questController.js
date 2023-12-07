@@ -29,8 +29,11 @@ function generateId() {
  */
 async function requestQuests(req, res) {
     try {
-        const userId = req.query.userId ?? null
-        const numQuests = req.query.numQuests ?? 3
+        console.log.apply(req)
+        const userId = req.body.userId ?? null
+        const numQuests = req.body.numQuests ?? 3
+        console.log(userId)
+        console.log(numQuests)
 
         // Must send user ID
         if (!userId) {
@@ -273,15 +276,15 @@ async function recGenerateLayer(possibleLocations, numLayers) {
  */
 async function acceptQuest(req, res) {
     try {
-        const userId = req.query.userId ?? null
-        const questId = req.query.questId ?? null
+        const userId = req.body.userId ?? null
+        const questId = req.body.questId ?? null
 
         if (!userId) {
             res.status(400).send('User ID required')
             return
         }
 
-        if (!req.query?.questId) {
+        if (!req.body?.questId) {
             res.status(404).send('Quest ID rquired')
             return
         }
@@ -302,11 +305,12 @@ async function acceptQuest(req, res) {
         }
 
         // Check if quest exists by finding it
+        console.log('questId: ', questId)
         const quest = await questModel.getQuest(questId)
 
         // If quest not found, return 404
         if (!quest) {
-            res.status(404).send('Quest not found')
+            res.status(404).send('Quest: ' + quest +  'not found')
             return
         }
 

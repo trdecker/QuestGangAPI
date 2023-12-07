@@ -75,6 +75,7 @@ async function deleteCharacterQuests(userId, questStatus) {
 async function getQuest(questId) {
     try {
         const quests = await questModel.find({ questId: questId })
+        console.log(quests)
         if (quests.length === 0)
             return null
         else return quests[0]
