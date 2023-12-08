@@ -322,74 +322,34 @@ async function getCharacter(req, res) {
  * @param {Object} res 
  * @returns 
  */
-async function getCharacterStatus(req, res) {
+ async function getCharacterStatus(req, res) {
     try {
         const username = req.query.username
-        console.log(username)
+        // console.log("getCharStatus username: ", username)
 
         // Require a user ID
         if (!username) {
-            res.status(400).send('Username is a required field')
+            res.status(400).send('User ID is a required field')
             return
         }
 
         const characters = await characterModel.getCharacterWithUsername(username)
 
         // Return 404 if no user found
-        if (characters.length === 0) {
+        if (characters.length == 0) {
             res.status(404).send('No character found with that username')
             return
         }
 
         // Return the character WITHOUT the hashed password
-        const user = characters.at(0)
+        const found = characters
+        console.log("charCon line 341: ", found)
 
-        // TODO: Retrieve class associated with classId and return the class information
-        const result = {
-            status: user.status,
-            name: user.name,
-            userId: user.userId,
-            classId: user.classId,
-            condition: user.condition,
-            level: user.level,
-            mana: user.mana,
-            hp: user.hp,
-            attack: user.attack,
-            defense: user.defense,
-            gold: user.gold
-        }
-        if (user.status.userStatus === userStatus.IN_COMBAT) {
-            const quest = await questModel.getQuest(user.status.questId)
-            console.log(quest)
-            const location = quest.locations.find((location) => location.locationId === user.status.locationId)
-            console.log('location:', location)
-            res.json({
-                status: found.status,
-                name: found.name,
-                userId: found.userId,
-                classId: found.classId,
-                condition: found.condition,
-                level: found.level,
-                mana: found.mana,
-                hp: found.hp,
-                gold: found.gold,
-                monstersInCombat: []
-            })
-        }
-        else {
-            res.json({
-                status: found.status,
-                name: found.name,
-                userId: found.userId,
-                classId: found.classId,
-                condition: found.condition,
-                level: found.level,
-                mana: found.mana,
-                hp: found.hp,
-                gold: found.gold
-            })
-        }
-        
+        res.json({
+            status: found.status,
+            userId: found.userId,
+            locationId: found.locationId
+        })
     } catch (e) {
         console.error(e)
         res.status(500).send('Error getting character')
