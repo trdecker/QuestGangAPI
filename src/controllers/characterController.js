@@ -181,28 +181,25 @@ async function login(req, res){
         }
 
         // Check if username is already taken
-        const characters = await characterModel.getCharacterWithUsername(username)
+        const character = await characterModel.getCharacterWithUsername(username)
 
-        if (characters.length == 0) {
+        if (!character) {
             res.status(400).send('Username not found')
             return
         }
 
-        const found = characters.at(0)
-
-        const match = await bcrypt.compare(password, found.password)
+        const match = await bcrypt.compare(password, character.password)
 
         const payload = {
-            userId: found.userId,
-            username: found.username
+            userId: character.userId,
+            username: character.username
         }
-
 
         if (match) {
             const token = jwt.sign(payload, process.env.KEY, {expiresIn: '3h'})
             res.json({
                 username,
-                userId: found.userId,
+                userId: character.userId,
                 token
             })
         } else {
