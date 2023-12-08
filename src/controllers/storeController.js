@@ -77,7 +77,7 @@ async function buyItem(req, res) {
             res.status(400).send('Not enough gold')
             return
         }
-        characterSetup.addItemToInventory(itemId, userID)
+        await characterSetup.addItemToInventory(itemId, userID)
         character.gold -= item2buy[0].sellPriceInGold
         console.log(character.gold)
         const updatedCharacter = await characterSetup.characterModel.findOneAndUpdate(
