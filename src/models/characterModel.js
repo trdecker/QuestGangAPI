@@ -155,13 +155,16 @@ async function addItemToInventory(itemId, characterId) {
             throw new Error("Item not found");
         }
 
+        if (item[0].type === 'weapon' || item[0].type === 'armor') {
+            item[0].equipped = false; // or true, depending on your default requirement
+        }
+
         // Use findOneAndUpdate on the character model
         const updatedCharacter = await characterModel.findOneAndUpdate(
             { userId: characterId },
             { $push: { items: item } },
             { new: true }
         );
-
         if (!updatedCharacter) {
             throw new Error("Character not found");
         }

@@ -12,7 +12,8 @@
     type: String,
     damage: String,
     sellPriceInGold: Number,
-    description: String
+    description: String,
+    equipped: Boolean
  })
  
  const itemModel = mongoose.model('item', itemSchema, 'items')
