@@ -595,14 +595,14 @@ async function doAction(req, res) {
         const weapon = user.weapons ? user.weapons.find((weapon) => weapon.equipped === true) : null
         const armor = user.armor.find((armor) => armor.equipped === true)
 
-        let userAttack = 1 // temp set to 1 because line below was returnin NaN
+        let userAttack = 5  // temp set to 1 because line below was returnin NaN
 
         // If a user tries to ATTACK
         if (action === userActions.ATTACK) {
             console.log("User attack: ", userAttack)
             console.log("Weapon: ", weapon)
             // Reduce monster's health by the user's attack and the damageMod of the weapon they're useing
-            userAttack = weapon ? user.attack += weapon.damageMod : user.attack
+            // userAttack = weapon ? user.attack += weapon.damage : user.attack
             // Damage monster. Raise to zero if negative
             monster.hp -= userAttack
             // Raise to zero if negative
