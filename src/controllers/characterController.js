@@ -188,13 +188,16 @@ async function login(req, res){
             return
         }
 
+        //Will compare input password after it has been hashed with the hashed password in the database
         const match = await bcrypt.compare(password, character.password)
 
+        // Payload will pass along userId and username to be added to the token
         const payload = {
             userId: character.userId,
             username: character.username
         }
 
+        // If passwords match create the token with the aforementioned payload
         if (match) {
             const token = jwt.sign(payload, process.env.KEY, {expiresIn: '3h'})
             res.json({
@@ -210,6 +213,8 @@ async function login(req, res){
         res.status(500).send('Error logging in')
     }
 }
+
+
 
 /**
  * @description Get the details about a character
@@ -231,12 +236,12 @@ async function signup(req, res) {
         }
 
         // Check if username is already taken
-        // const characters = await character.getCharacterWithUsername(username)
+        const characters = await character.getCharacterWithUsername(username)
 
-        // if (characters.length > 0) {
-        //     res.status(400).send('Username already taken')
-        //     return
-        // }
+        if (characters.length > 0) {
+            res.status(400).send('Username already taken')
+            return
+        }
 
         // Create a new character
         const newCharacter = {
