@@ -18,6 +18,7 @@
     dotenv.config()
     const port = process.env.PORT ?? 80
     const URI = process.env.URI
+    console.log(URI)
 
     const corsOptions = {
         origin: ['http://localhost:3000', 'http://localhost:80', 'https://questgangapi.onrender.com', process.env.IP_1, process.env.IP_Mo, process.env.IP_GH],
