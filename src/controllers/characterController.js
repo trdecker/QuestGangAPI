@@ -181,20 +181,18 @@ async function login(req, res){
         }
 
         // Check if username is already taken
-        const characters = await characterModel.getCharacterWithUsername(username)
+        const character = await characterModel.getCharacterWithUsername(username)
 
-        if (characters.length == 0) {
+        if (!character) {
             res.status(400).send('Username not found')
             return
         }
 
-        const found = characters.at(0)
-
-        const match = await bcrypt.compare(password, found.password)
+        const match = await bcrypt.compare(password, character.password)
 
         const payload = {
-            userId: found.userId,
-            username: found.username
+            userId: character.userId,
+            username: character.username
         }
 
 
@@ -202,7 +200,7 @@ async function login(req, res){
             const token = jwt.sign(payload, process.env.KEY, {expiresIn: '3h'})
             res.json({
                 username,
-                userId: found.userId,
+                userId: character.userId,
                 token
             })
         } else {
@@ -283,34 +281,30 @@ async function getCharacter(req, res) {
             return
         }
 
-        const characters = await character.getCharacterWithUsername(username)
+        const character = await character.getCharacterWithUsername(username)
 
         // Return 404 if no user found
-        if (characters.length === 0) {
+        if (!character) {
             res.status(404).send('No character found with that username')
             return
         }
 
         // Return the character WITHOUT the hashed password
-        const found = characters.at(0)
 
-        const json = {
-            username: found.username,
-            userId: found.userId,
-            name: found.name,
-            classId: found.classId,
-            status: found.status,
-            condition: found.condition,
-            level: found.level,
-            mana: found.mana,
-            hp: found.hp,
-            armor: found.armor,
-            items: found.items,
-            weapons: found.weapons,
-            gold: found.gold
-        }
-
-        res.json(json)
+        res.json({
+            username: character.username,
+            userId: character.userId,
+            name: character.name,
+            classId: character.classId,
+            status: character.status,
+            condition: character.condition,
+            level: character.level,
+            mana: character.mana,
+            hp: character.hp,
+            armor: character.armor,
+            items: character.items,
+            weapons: character.weapons,
+            gold: character.gold})
     } catch (e) {
         console.error(e)
         res.status(500).send('Error getting character')
